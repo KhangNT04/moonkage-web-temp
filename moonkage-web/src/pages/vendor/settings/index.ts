@@ -1,0 +1,1 @@
+export { VendorSettingsPage } from './VendorSettingsPage';

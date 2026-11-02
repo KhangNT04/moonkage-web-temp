@@ -1,0 +1,130 @@
+# 🥮 Moonkage Web Platform
+
+> Sàn thương mại điện tử chuyên biệt Bánh Trung Thu — Mua lẻ & Đặt hàng số lượng lớn cho Doanh nghiệp (B2C & B2B Platform).
+
+---
+
+## 🌟 Tổng Quan Dự Án
+
+Moonkage là giải pháp nền tảng kết nối trực tiếp các nghệ nhân làm bánh cổ truyền, hộ kinh doanh bánh thủ công với người tiêu dùng và các doanh nghiệp có nhu cầu đặt hàng quà tặng Trung Thu số lượng lớn. Nền tảng tích hợp cơ chế bảo chứng ký quỹ (Escrow), mô phỏng xác thực sinh trắc học thẻ CCCD gắn chip qua NFC và hệ thống quy tắc nghiệp vụ chặt chẽ.
+
+### Điểm nhấn kiến trúc & công nghệ
+- **Frontend Architecture**: Feature-Sliced Design (FSD 2.0) phân tầng nghiêm ngặt (`app`, `pages`, `widgets`, `features`, `entities`, `shared`).
+- **Design System "Đêm Rằm"**: Tông màu chủ đạo Đỏ Rượu (`#7B1824`), Vàng Trăng Rằm (`#D4A017`), Dạ Kim Khuya kết hợp hệ thống CSS Tokens hai chế độ Light / Dark (`Trăng Thanh` & `Đêm Rằm`).
+- **Core Rules**:
+  - **L1 (AsyncState)**: Xử lý 4 trạng thái bất đồng bộ (Loading, Error, Empty, Loaded) nhất quán.
+  - **L2 (Design System)**: 100% dùng token CSS và CSS Modules, không phụ thuộc Tailwind hay UI lib nặng.
+  - **L3 (Id Generation)**: Chuẩn hóa định danh tạm thời qua `generateEntityId` có tiền tố và UUID có cấu trúc (thay thế hoàn toàn `Math.random` / `Date.now`).
+  - **L4 (Write Actions)**: Mọi thao tác ghi bọc qua `useAction` chống double-click và quản lý trạng thái bận.
+  - **L5 (Explicit Demo Mode)**: Demo mode là tính năng kích hoạt có chủ đích (`VITE_DEMO_MODE=true`). Khi tắt demo, API ném lỗi mạng để giao diện hiển thị `ErrorState` thay vì nuốt lỗi âm thầm.
+  - **L6 (Pages Không Gọi API)**: Tầng `pages/` không bao giờ gọi `*Api.*` hay `useAsync` trực tiếp. Mọi lần đọc dữ liệu đi qua entity query hook (`useOrderList`, `useVendorSearch`, ...), mọi lần ghi đi qua feature mutation hook (`useLogin`, `useCheckout`, ...).
+  - **L7 (Public API)**: Chỉ import qua `index.ts` của slice; không import sâu, không import ngang tầng, không có vòng phụ thuộc.
+
+---
+
+## 📁 Cấu Trúc Mã Nguồn (FSD)
+
+```text
+src/
+├── app/                  # Khởi chạy ứng dụng, Router, Providers, Layouts, Guards, Global Styles
+│   ├── layouts/          # BaseLayout, VendorLayout, AdminLayout, LayoutErrorBoundary
+│   ├── providers/        # AppProviders (Toast, Theme, Boundary)
+│   ├── guards/           # RequireAuth, RequireNfc
+│   └── routes.tsx        # Cấu hình định tuyến toàn sàn theo mã IA
+├── pages/                # Các trang theo từng phân vùng (IA Architecture)
+│   ├── base/             # M1.0 - M4.3, M7.0, M8.0 (Trang chủ, Catalog, B2B Hub, Cart, Checkout, Policy)
+│   ├── auth/             # M5.1 - M5.5 (Login, Register, Password)
+│   ├── account/          # M6.0 - M6.6 (Dashboard, Đơn hàng, Yêu cầu báo giá, NFC CCCD, Thông báo)
+│   ├── vendor/           # B1.0 - B6.4 (Kênh người bán, Đơn hàng, Maket, Báo giá, Sản phẩm, Tài chính)
+│   ├── admin/            # Q1.0 - Q6.4 (Bàn làm việc Admin, Duyệt xưởng, Kiểm duyệt, Ký quỹ Escrow, Cấu hình)
+│   └── system/           # Sitemap tương tác 39+ màn hình và Flow 1-7
+├── widgets/              # Header, Footer, Sidebar, CommandPalette
+├── features/             # Hành động nghiệp vụ: login, register, checkout, accept-quote,
+│                         #   add-to-cart, respond-to-quote-request, verify-nfc, pay-remainder...
+├── entities/             # Data models & API mappers (product, order, cart, request, vendor, user, dispute)
+└── shared/               # Shared UI, API Gateway, Lib hooks, Config, Utils
+    ├── api/              # Axios instance, Gateway endpoints, executeWithDemoMode
+    ├── config/           # Routes taxonomy, Env configuration
+    ├── lib/              # useAsync, useAction, validators, themeStore
+    ├── ui/               # Button, Card, Input, Modal, Toast, AsyncState, Icon, Badge...
+    └── utils/            # formatCurrency, formatDate, generateEntityId, maskMiddle
+```
+
+---
+
+## 🚀 7 Luồng Nghiệp Vụ Chính (Flow 1 – Flow 7)
+
+1. **Flow 1**: Mua lẻ bánh sẵn & Tách đơn theo từng Shop độc lập (`BR-25`, `FR-08`).
+2. **Flow 2**: Đặt hàng Doanh nghiệp số lượng lớn (Mở toàn sàn), So sánh báo giá & Duyệt Maket mở khóa cọc (`FR-16`, `FR-44`, `FR-48`).
+3. **Flow 3**: Đặt hàng Doanh nghiệp chỉ định trực tiếp cho Xưởng nghệ nhân truyền thống (`FR-14`, `BR-21`).
+4. **Flow 4**: Đăng ký gian hàng Hộ kinh doanh / DNTN (`BR-33`), xác thực CCCD NFC và đóng phí mở bán.
+5. **Flow 5**: Tiếp nhận khiếu nại trong 48h, đóng băng tiền ký quỹ Escrow và Admin ra phán quyết (`FR-49`, `FR-51`).
+6. **Flow 6**: Mô phỏng tương tác ứng dụng quét chip NFC thẻ CCCD 5 bước (`V1.0 – V5.0`).
+7. **Flow 7**: Trọng tài Admin & Quản trị Danh mục Vỏ/Nhân bánh chuẩn hóa (`FR-54`, `BR-34`).
+
+---
+
+## ⚙️ Thiết Lập Môi Trường & Khởi Chạy
+
+### Yêu cầu tiên quyết
+- Node.js >= 18.0
+- npm >= 9.0
+
+### Cài đặt dependencies
+```bash
+npm install
+```
+
+### Các biến môi trường (`.env`)
+```bash
+# Bật/tắt chế độ Demo dữ liệu tĩnh (mặc định: false)
+VITE_DEMO_MODE=false
+
+# Địa chỉ API Gateway backend
+VITE_API_BASE_URL=https://api.moonkage.vn
+```
+
+### Lệnh chạy phát triển
+```bash
+# Chạy với API Backend thật
+npm run dev
+
+# Chạy chế độ Demo độc lập với đầy đủ kịch bản mẫu
+npm run dev:demo
+```
+
+---
+
+## 🧪 Kiểm Tra Chất Lượng Mã Nguồn (Quality Gate)
+
+Dự án áp dụng quy chuẩn kiểm tra 4 lớp trước mỗi bản phát hành:
+
+```bash
+npm run check
+```
+Lệnh trên thực hiện tuần tự:
+1. **`oxlint`**: Linter siêu tốc đảm bảo 0 cảnh báo, 0 lỗi TypeScript/React Compiler.
+2. **`tsc -b`**: Kiểm tra toàn vẹn kiểu dữ liệu tĩnh.
+3. **`vitest run`**: 67 file kiểm thử với 273 unit tests bao phủ:
+   - Cơ chế ký quỹ và trần hoàn tiền Escrow (`disputeEscrow.test.ts`).
+   - Bộ lọc đa diện Vỏ & Nhân bánh (`taxonomyFilter.test.ts`).
+   - Tách giỏ hàng đa xưởng (`cartStore.test.ts`).
+   - Đổi theme và đồng bộ localStorage (`themeStore.test.ts`).
+   - Nhận diện trạng thái rỗng tự động AsyncState (`AsyncState.test.ts`).
+   - Sinh ID an toàn truy vết (`generateEntityId.test.ts`).
+   - Cơ chế không nuốt lỗi API trong Demo mode (`demo.test.ts`).
+   - Các API Entities & Mapper DTO (`productApi`, `orderApi`, `cartApi`).
+4. **`vite build`**: Đóng gói bundle tối ưu (Code splitting theo Route, FSD slice).
+
+Ngoài ra còn hai kiểm tra cấu trúc chạy tay:
+```bash
+node scripts/check-css-modules.mjs   # không còn style inline trong component
+node scripts/check-encoding.mjs      # mọi file nằm trong UTF-8
+npx madge --circular --extensions ts,tsx src   # không có vòng phụ thuộc
+```
+
+---
+
+## 🎨 Theme & Phím Tắt Tiện Ích
+- **`Ctrl + K`** hoặc **`Cmd + K`**: Mở **Command Palette** để tìm nhanh màn hình, chuyển vai người dùng (Khách, Doanh nghiệp, Nghệ nhân, Admin) hoặc đổi theme sáng / tối.
+- **Sơ đồ giao diện tương tác**: Truy cập `/so-do-giao-dien` để theo dõi tiến độ và kiểm thử trực quan tất cả 39+ màn hình và 7 Flow nghiệp vụ.

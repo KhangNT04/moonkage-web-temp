@@ -1,0 +1,79 @@
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  min-height: 200px;
+  gap: 16px;
+  text-align: center;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, var(--color-gold) 20%, transparent);
+  border-top-color: var(--color-gold);
+  border-right-color: var(--color-primary);
+  animation: spin 0.85s linear infinite;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--color-gold) 20%, transparent);
+}
+
+.loadingText {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-sm, 0 2px 8px color-mix(in srgb, var(--color-shadow) 5%, transparent));
+  text-align: center;
+  max-width: 520px;
+  margin: 32px auto;
+  gap: 16px;
+}
+
+.errorIconWrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 440px;
+}
+
+.retryBtn {
+  margin-top: 8px;
+}

@@ -1,0 +1,267 @@
+/* app/styles/tokens.css — NGUỒN DUY NHẤT của giá trị thiết kế (package-architecture §6).
+   Bảng màu "Đêm rằm": giấy kem, đỏ son, vàng đồng; chế độ tối là đêm trăng ấm. */
+:root {
+  /* Màu nền và mực */
+  --color-bg: #fbf6ec;
+  --color-bg-deep: #f4ead8;
+  --color-surface: #fffdf8;
+  --color-surface-2: #f7efe1;
+  --color-surface-3: #efe3cd;
+  --color-text: #2a1d14;
+  --color-text-muted: #75604f;
+  --color-text-subtle: #9d8877;
+  --color-border: #e8dcc6;
+  --color-border-strong: #d6c4a6;
+
+  /* Thương hiệu */
+  --color-primary: #b3261e;
+  --color-primary-hover: #921d17;
+  --color-primary-soft: #f8e1dc;
+  --color-on-primary: #fffaf3;
+  --color-gold: #b8862b;
+  --color-gold-hover: #9b6f1f;
+  --color-gold-soft: #f5e6c4;
+  --color-gold-bright: #e2b25c;
+  --color-ink: #2f4b6e;
+  --color-ink-soft: #e1e9f3;
+
+  /* Trạng thái */
+  --color-success: #2f7a4a;
+  --color-success-soft: #dff0e3;
+  --color-warning: #a8670f;
+  --color-warning-soft: #f9ead0;
+  --color-danger: #b3261e;
+  --color-danger-soft: #f8e1dc;
+  --color-info: #2f5d8a;
+  --color-info-soft: #e0eaf5;
+
+  /* Màu theo khu (đổi bằng data-zone ở layout) */
+  --color-zone: var(--color-primary);
+  --color-zone-soft: var(--color-primary-soft);
+
+  /* Màu phụ trợ — module CSS dùng token, không hardcode hex ở nơi khác (§6) */
+  --color-white: #ffffff;
+  --color-text-on-dark: #f4ead9;
+  --color-gold-ink: #2a1a06;
+  --color-success-ink: #1b5e20;
+  --color-info-bright: #2196f3;
+  --color-shadow: #000000;
+  --color-shadow-deep: #0e0a07;
+  --color-shadow-warm: #3c1e0a;
+  --color-night-1: #18110b;
+  --color-night-2: #120d09;
+
+  /* Tên cũ, giữ lại để không phá vỡ các module đang dùng */
+  --color-text-secondary: var(--color-text-muted);
+  --color-bg-alt: var(--color-surface-2);
+  --color-bg-secondary: var(--color-surface-2);
+  --color-secondary: var(--color-gold);
+  --color-secondary-dark: var(--color-gold-hover);
+  --color-primary-dark: var(--color-primary-hover);
+  --color-primary-light: var(--color-primary-soft);
+  --color-blue: var(--color-info);
+  --color-green: var(--color-success);
+  --color-red: var(--color-danger);
+
+  /* Gradient & Theme Patterns */
+  --gradient-gold: linear-gradient(135deg, #e9c27a 0%, #b8862b 55%, #8f6418 100%);
+  --gradient-ember: linear-gradient(135deg, #d8452f 0%, #b3261e 50%, #7d1712 100%);
+  --gradient-night: linear-gradient(160deg, #2a1810 0%, #160d08 100%);
+  --gradient-paper: radial-gradient(1200px 600px at 85% -10%, rgb(226 178 92 / 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgb(179 38 30 / 0.08), transparent 60%);
+  --gradient-moon: radial-gradient(circle at 50% 50%, #fff7d6 0%, #fbd578 45%, #e29e2e 85%, #b57416 100%);
+  --gradient-lacquer: linear-gradient(135deg, #3d1411 0%, #240c0b 50%, #120504 100%);
+
+  /* Glow Effects */
+  --glow-moon: 0 0 60px 20px rgba(245, 187, 86, 0.35);
+  --glow-gold: 0 0 24px -2px rgba(226, 178, 92, 0.4);
+  --glow-lantern: 0 8px 30px rgba(216, 69, 47, 0.35);
+
+  /* Typography */
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-display);
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-5xl: 3.75rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --leading-tight: 1.2;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  /* Khoảng cách */
+  --space-0: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Kích thước */
+  --container: 1240px;
+  --container-narrow: 860px;
+  --header-h: 72px;
+  --sidebar-w: 248px;
+  --control-h: 42px;
+  --control-h-sm: 34px;
+  --control-h-lg: 50px;
+
+  /* Bo góc, bóng */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+  --shadow-xs: 0 1px 2px rgb(60 30 10 / 0.06);
+  --shadow-sm: 0 2px 6px rgb(60 30 10 / 0.07), 0 1px 2px rgb(60 30 10 / 0.05);
+  --shadow-md: 0 10px 30px -10px rgb(60 30 10 / 0.18), 0 2px 6px rgb(60 30 10 / 0.06);
+  --shadow-lg: 0 24px 60px -20px rgb(60 30 10 / 0.3);
+  --shadow-glow: 0 0 0 4px rgb(184 134 43 / 0.18);
+  --ring: 0 0 0 3px rgb(179 38 30 / 0.25);
+
+  /* Chuyển động */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 220ms;
+  --duration-slow: 420ms;
+  --transition-fast: 120ms;
+  --toast-duration: 4000ms;
+
+  /* Lớp chồng */
+  --z-header: 50;
+  --z-dropdown: 60;
+  --z-dialog: 100;
+  --z-toast: 120;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #140e0a;
+    --color-bg-deep: #0f0a07;
+    --color-surface: #1d1611;
+    --color-surface-2: #261d16;
+    --color-surface-3: #31261d;
+    --color-text: #f4ead9;
+    --color-text-muted: #bba68f;
+    --color-text-subtle: #8c7a68;
+    --color-border: #3a2d22;
+    --color-border-strong: #4d3d2f;
+    --color-primary: #e0574b;
+    --color-primary-hover: #ec6e62;
+    --color-primary-soft: #3b1a16;
+    --color-on-primary: #1a0f0b;
+    --color-gold: #e2b25c;
+    --color-gold-hover: #efc77c;
+    --color-gold-soft: #3a2c15;
+    --color-ink: #8fb3e0;
+    --color-ink-soft: #1c2a3c;
+    --color-success: #74c58f;
+    --color-success-soft: #173323;
+    --color-warning: #e7b05c;
+    --color-warning-soft: #3a2a12;
+    --color-danger: #ef7468;
+    --color-danger-soft: #3b1a16;
+    --color-info: #8fb3e0;
+    --color-info-soft: #1c2a3c;
+    --gradient-paper: radial-gradient(1200px 600px at 85% -10%, rgb(226 178 92 / 0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgb(224 87 75 / 0.08), transparent 60%);
+    --shadow-md: 0 10px 30px -10px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+    --color-white: #ffffff;
+    --color-text-on-dark: #f4ead9;
+    --color-gold-ink: #1a0f0b;
+    --color-success-ink: #74c58f;
+    --color-info-bright: #64b5f6;
+    --color-shadow: #000000;
+    --color-shadow-deep: #0e0a07;
+    --color-shadow-warm: #3c1e0a;
+    --color-night-1: #18110b;
+    --color-night-2: #120d09;
+    --color-white: #ffffff;
+  --color-text-on-dark: #f4ead9;
+  --color-gold-ink: #1a0f0b;
+  --color-success-ink: #74c58f;
+  --color-info-bright: #64b5f6;
+  --color-shadow: #000000;
+  --color-shadow-deep: #0e0a07;
+  --color-shadow-warm: #3c1e0a;
+  --color-night-1: #18110b;
+  --color-night-2: #120d09;
+  --color-text-secondary: var(--color-text-muted);
+  --color-bg-alt: var(--color-surface-2);
+  --color-bg-secondary: var(--color-surface-2);
+  --color-secondary: var(--color-gold);
+  --color-secondary-dark: var(--color-gold-hover);
+  --color-primary-dark: var(--color-primary-hover);
+  --color-primary-light: var(--color-primary-soft);
+  --color-blue: var(--color-info);
+  --color-green: var(--color-success);
+  --color-red: var(--color-danger);
+  color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #140e0a;
+  --color-bg-deep: #0f0a07;
+  --color-surface: #1d1611;
+  --color-surface-2: #261d16;
+  --color-surface-3: #31261d;
+  --color-text: #f4ead9;
+  --color-text-muted: #bba68f;
+  --color-text-subtle: #8c7a68;
+  --color-border: #3a2d22;
+  --color-border-strong: #4d3d2f;
+  --color-primary: #e0574b;
+  --color-primary-hover: #ec6e62;
+  --color-primary-soft: #3b1a16;
+  --color-on-primary: #1a0f0b;
+  --color-gold: #e2b25c;
+  --color-gold-hover: #efc77c;
+  --color-gold-soft: #3a2c15;
+  --color-ink: #8fb3e0;
+  --color-ink-soft: #1c2a3c;
+  --color-success: #74c58f;
+  --color-success-soft: #173323;
+  --color-warning: #e7b05c;
+  --color-warning-soft: #3a2a12;
+  --color-danger: #ef7468;
+  --color-danger-soft: #3b1a16;
+  --color-info: #8fb3e0;
+  --color-info-soft: #1c2a3c;
+  --gradient-paper: radial-gradient(1200px 600px at 85% -10%, rgb(226 178 92 / 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgb(224 87 75 / 0.08), transparent 60%);
+  --shadow-md: 0 10px 30px -10px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 24px 60px -20px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+/* Màu theo khu: Kênh người bán dùng vàng đồng, Quản trị dùng mực xanh */
+[data-zone='vendor'] {
+  --color-zone: var(--color-gold);
+  --color-zone-soft: var(--color-gold-soft);
+}
+[data-zone='admin'] {
+  --color-zone: var(--color-ink);
+  --color-zone-soft: var(--color-ink-soft);
+}

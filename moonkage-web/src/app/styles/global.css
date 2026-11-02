@@ -1,0 +1,174 @@
+/* app/styles/global.css — html, body, typography nền */
+html {
+  background: var(--color-bg);
+  scroll-behavior: smooth;
+}
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+  background: var(--gradient-paper), var(--color-bg);
+  background-attachment: fixed;
+}
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+h4,
+h5,
+h6 {
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-text);
+}
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+code,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Animations: Lễ Hội Trăng Rằm & Đèn Lồng */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes lanternSway {
+  0%, 100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes moonPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 50px 15px rgba(245, 187, 86, 0.35);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 75px 25px rgba(245, 187, 86, 0.5);
+  }
+}
+
+@keyframes starlight {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes sealPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 40%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Common animation helper classes */
+.anim-float {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.anim-sway {
+  transform-origin: top center;
+  animation: lanternSway 3.6s ease-in-out infinite;
+}
+
+.anim-moon {
+  animation: moonPulse 6s ease-in-out infinite;
+}
+
+.anim-fade-in {
+  animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  /*
+   * The durations come from the tokens, so overriding the token is enough —
+   * no `!important` needed (package-architecture §6).
+   */
+  *,
+  *::before,
+  *::after {
+    animation-duration: var(--duration-fast);
+    animation-iteration-count: 1;
+    transition-duration: var(--duration-fast);
+    scroll-behavior: auto;
+  }
+}
+
+/*
+ * A visible keyboard focus ring on every interactive element.
+ *
+ * Without this, a keyboard user cannot tell where the focus is: the app had only two
+ * `focus-visible` rules in the whole codebase.
+ */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Controls that sit on the brand colour need a light ring instead. */
+.mk-on-brand :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--color-gold-bright);
+}
+
+/* Never show the ring for a mouse click. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus:not(:focus-visible) {
+  outline: none;
+}

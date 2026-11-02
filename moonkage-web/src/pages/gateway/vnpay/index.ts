@@ -1,0 +1,1 @@
+export { VnPaySandboxPage } from './VnPaySandboxPage';
