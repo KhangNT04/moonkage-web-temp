@@ -4,6 +4,7 @@ import { ToastContainer } from '@/shared/ui';
 import { useProductCatalog, useTaxonomyCatalog } from '@/entities/product';
 import { useVendorCatalog } from '@/entities/vendor';
 import { useDeliveryProvinceCode } from '@/entities/region';
+import { useNotificationPush } from '@/entities/notification';
 import { RealtimeProvider } from '@/shared/api/realtime';
 import { queryClient } from '@/shared/api';
 import { subscribeToToken } from '@/shared/api/tokenVault';
@@ -46,7 +47,24 @@ function SessionRealtime({ children }: { children: ReactNode }) {
     return subscribeToToken(setToken);
   }, []);
 
-  return <RealtimeProvider token={token}>{children}</RealtimeProvider>;
+  return (
+    <RealtimeProvider token={token}>
+      <NotificationPushBridge />
+      {children}
+    </RealtimeProvider>
+  );
+}
+
+/**
+ * Nhận thông báo đẩy của orchestrator-service (NFR-10).
+ *
+ * `useNotificationPush` phải nằm trong `RealtimeProvider` vì nó dùng chính
+ * socket đó; nó nạp ở đây một lần nên chuông và trang thông báo đọc cùng một
+ * kho dữ liệu.
+ */
+function NotificationPushBridge() {
+  useNotificationPush();
+  return null;
 }
 
 /**
