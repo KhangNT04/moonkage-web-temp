@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
 import { Button, Card, Icon } from '@/shared/ui';
+import { captureUnexpectedError } from '@/shared/observability';
 import styles from './RouteErrorBoundary.module.css';
 
 export function RouteErrorBoundary() {
@@ -14,6 +16,14 @@ export function RouteErrorBoundary() {
   } else if (error instanceof Error) {
     errorMessage = error.message;
   }
+
+  // Lỗi route là lỗi ứng dụng (không phải lỗi dữ liệu người dùng nhập sai):
+  // báo để đội vận hành thấy màn hình nào đang hỏng.
+  // Báo trong effect chứ không trong render: boundary render lại nhiều lần,
+  // báo trong render sẽ tạo bản sao lặp lại của cùng một lỗi.
+  useEffect(() => {
+    captureUnexpectedError(error, { source: 'route-error-boundary', statusCode });
+  }, [error, statusCode]);
 
   const handleReload = () => {
     window.location.reload();

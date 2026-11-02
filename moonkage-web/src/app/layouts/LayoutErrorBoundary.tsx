@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Card, Button, Icon } from '@/shared/ui';
+import { captureUnexpectedError } from '@/shared/observability';
 import styles from './LayoutErrorBoundary.module.css';
 
 interface Props {
@@ -29,6 +30,15 @@ export class LayoutErrorBoundary extends Component<Props, State> {
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`[LayoutErrorBoundary:${this.props.areaName || 'General'}]`, error, errorInfo);
+
+    // Báo lỗi render cho Sentry kèm tên khu vực — biết vùng nào hỏng là
+    // thông tin quan trọng nhất khi điều tra.
+    captureUnexpectedError(error, {
+      source: 'layout-error-boundary',
+      area: this.props.areaName || 'General',
+      componentStack: errorInfo.componentStack,
+    });
+
     // Tự động reload một lần nếu gặp lỗi chunk hash sau đợt deploy mới
     const msg = error.message.toLowerCase();
     if (msg.includes('dynamically imported module') || msg.includes('failed to fetch')) {

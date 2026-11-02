@@ -6,7 +6,23 @@ import './styles/reset.css';
 import './styles/global.css';
 import { migrateLegacyTokens } from './providers';
 import { applyCspMeta, setRuntimeFlags, type FeatureFlag } from '@/shared/config';
+import {
+  ANALYTICS_HOST,
+  ANALYTICS_MEASUREMENT_ID,
+  OBSERVABILITY_CONTEXT,
+  isAnalyticsEnabled,
+} from '@/shared/config/observability';
+import { initAnalytics, initSentry, initWebVitals } from '@/shared/observability';
 import { App } from './App';
+
+// Observability khởi động **trước** React: càng sớm càng bắt được lỗi lúc
+// khởi động. Cả ba đều no-op khi không có cấu hình, nên local và CI không
+// có request nào đi ra ngoài.
+initSentry();
+initWebVitals();
+if (isAnalyticsEnabled() && !OBSERVABILITY_CONTEXT.isDemoMode) {
+  initAnalytics(ANALYTICS_MEASUREMENT_ID, ANALYTICS_HOST || undefined);
+}
 
 // A token left in `localStorage` by an older release is moved into the token
 // vault (session-scoped) and deleted from there. Runs before the first render

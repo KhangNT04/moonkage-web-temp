@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 
 /**
  * The write side of the cart (FR-08, BR-28).
@@ -11,6 +12,14 @@ import { isDemoMode } from '@/shared/config';
 
 /** Add a line. The backend answers the created `CartResponse.Line`. */
 export async function addCartItem(item: { productId: string; quantity: number }): Promise<void> {
+  // Funnel: "thêm vào giỏ" là bước đo được quan trọng nhất của hành trình
+  // mua. Chỉ ghi mã sản phẩm và số lượng — không ghi giá hay tên sản phẩm
+  // (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.addToCart, {
+    product_id: item.productId,
+    quantity: item.quantity,
+  });
+
   if (isDemoMode()) {
     return;
   }

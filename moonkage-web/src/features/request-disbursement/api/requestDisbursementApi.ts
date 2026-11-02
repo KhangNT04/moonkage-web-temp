@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import type { CreateDisbursementPayload, DisbursementDto } from '@/entities/payment';
 
 /**
@@ -22,6 +23,10 @@ export async function requestDisbursement(
   orderId: string,
   payload: CreateDisbursementPayload
 ): Promise<DisbursementDto | null> {
+  // Funnel giải ngân (FR-41). Không ghi `amount` — đó là dữ liệu tài chính
+  // của đơn hàng (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.requestDisbursement, { purpose: payload.purpose });
+
   if (isDemoMode()) {
     return null;
   }

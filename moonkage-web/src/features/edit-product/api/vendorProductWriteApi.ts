@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import type {
   SaveVendorProductPayload,
   UpdateVendorProductPayload,
@@ -19,6 +20,10 @@ export async function createVendorProduct(
   vendorId: string,
   payload: SaveVendorProductPayload
 ): Promise<VendorProductDto | null> {
+  // Funnel người bán (FR-29). Chỉ ghi mã sản phẩm và hành động — không ghi
+  // tên hay giá sản phẩm (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.saveProduct, { action: 'create' });
+
   if (isDemoMode()) {
     return null;
   }
@@ -35,6 +40,8 @@ export async function replaceVendorProduct(
   productId: string,
   payload: SaveVendorProductPayload
 ): Promise<VendorProductDto | null> {
+  trackEvent(ANALYTICS_EVENTS.saveProduct, { action: 'update' });
+
   if (isDemoMode()) {
     return null;
   }
@@ -53,6 +60,10 @@ export async function updateVendorProductStatus(
   productId: string,
   payload: UpdateVendorProductPayload
 ): Promise<VendorProductDto | null> {
+  trackEvent(ANALYTICS_EVENTS.changeProductStatus, {
+    action: payload.status,
+  });
+
   if (isDemoMode()) {
     return null;
   }

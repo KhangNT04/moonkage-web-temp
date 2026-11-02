@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import { storeTokens, userStore, type User } from '@/entities/user';
 
 /**
@@ -37,6 +38,11 @@ export async function login(username: string, password: string): Promise<User> {
   }
 
   storeTokens(dto.token, dto.refreshToken);
+
+  // Funnel đăng nhập (FR-01). Chỉ ghi vai trò — không ghi tên, email hay
+  // số điện thoại (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.login, { role: mapRole(dto.role) });
+
   return {
     id: dto.accountId,
     name: dto.fullName || dto.email || 'Người dùng Moonkage',

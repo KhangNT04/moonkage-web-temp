@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import { disputeStore, type Dispute } from '@/entities/dispute';
 import { mapDisputeDtoToEntity, type DisputeDto } from '@/entities/dispute';
 import type { DisputeDecision } from '@/entities/dispute';
@@ -24,6 +25,11 @@ export async function resolveDispute(
   orderId: string,
   payload: ResolveDisputePayload
 ): Promise<Dispute> {
+  // Funnel phân xử khiếu nại (FR-49). Chỉ ghi **quyết định** — không ghi
+  // `refundAmount` (dữ liệu tài chính) và không ghi `decisionReason` (nội
+  // dung tự do, có thể chứa PII) (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.resolveDispute, { decision: payload.decision });
+
   if (isDemoMode()) {
     const current = disputeStore.get().find((d) => d.orderId === orderId);
     if (current) {

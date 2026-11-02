@@ -22,9 +22,16 @@ export function NfcVerificationSimulator({ isOpen, onClose, onSuccess }: Props) 
         setScanning(false);
         setNfcVerified();
         toast.success('Xác thực thẻ CCCD gắn chip qua NFC thành công! Danh tính đã được ký số.');
-        onSuccess?.();
+        // `onSuccess` **không** được gọi ở đây: bước 3 là nơi người dùng
+        // đọc kết quả và bấm "Hoàn tất". Gọi sớm sẽ đóng modal ngay, khiến
+        // bước 3 không bao giờ hiển thị.
       }, 1200);
     }, 1000);
+  };
+
+  const handleFinish = () => {
+    onSuccess?.();
+    onClose();
   };
 
   const handleReset = () => {
@@ -70,7 +77,7 @@ export function NfcVerificationSimulator({ isOpen, onClose, onSuccess }: Props) 
             <p className={styles.desc}>
               Hồ sơ công dân hợp lệ. Bạn đã đủ điều kiện kích hoạt gian hàng người bán (BR-33).
             </p>
-            <Button variant="primary" onClick={handleReset}>
+            <Button variant="primary" onClick={handleFinish}>
               Hoàn tất
             </Button>
           </div>

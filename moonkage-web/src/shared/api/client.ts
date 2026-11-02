@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '@/shared/config/env';
 import { apiCredentials, usesCookieAuth } from '@/shared/config/security';
+import { captureApiError } from '@/shared/observability';
 import { GATEWAY } from './gateway';
 import { unwrap, type ApiEnvelope } from './envelope';
 import { clearTokens, getAccessToken, getRefreshToken, updateTokens } from './tokenVault';
@@ -153,6 +154,19 @@ apiClient.interceptors.response.use(
     const message = error.response?.data?.message || error.message || 'Lỗi kết nối máy chủ';
     const status = error.response?.status || 500;
     const errors = error.response?.data?.errors;
+
+    // Báo cáo lỗi API kèm ngữ cảnh: biết endpoint nào hỏng và mã HTTP nào
+    // giúp đội vận hành xử lý nhanh hơn nhiều so với một stack trace trần.
+    // Chỉ 4xx nghiệp vụ (trừ 401) và 5xx mới đáng báo — lỗi dữ liệu người
+    // dùng nhập sai không phải lỗi hệ thống.
+    const isReportable = status >= 500 || (status >= 400 && status < 500 && status !== 401);
+    if (isReportable) {
+      captureApiError(error, {
+        endpoint: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        status,
+      });
+    }
 
     return Promise.reject(new ApiError(message, status, errors));
   }

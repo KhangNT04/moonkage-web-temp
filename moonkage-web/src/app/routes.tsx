@@ -7,6 +7,7 @@ import { AdminLayout } from './layouts/AdminLayout/AdminLayout';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { RequireAuth, RequireAdmin } from './guards';
 import { PageLoader } from '@/shared/ui';
+import { startPageViewTracking } from './providers/PageViewTracker';
 
 function withSuspense(Component: ComponentType) {
   return (
@@ -98,7 +99,9 @@ const AdminInterprovinceFeePage = page(() => import('@/pages/admin/interprovince
 const AdminOpeningFeePage = page(() => import('@/pages/admin/opening-fee'), 'AdminOpeningFeePage');
 const AdminCakeCatalogPage = page(() => import('@/pages/admin/cake-catalog'), 'AdminCakeCatalogPage');
 
-const router = createBrowserRouter([
+// Bảng route của ứng dụng. Tách ra thành hằng riêng để có thể tham chiếu
+// từ nơi khác (ví dụ kiểm thử) mà không phải export toàn bộ module.
+const ROUTE_TABLE = [
   // Gateway sandbox (isolated view)
   {
     path: '/gateway/vnpay/:paymentId',
@@ -232,7 +235,17 @@ const router = createBrowserRouter([
       </BaseLayout>
     ),
   },
-]);
+];
+
+const router = createBrowserRouter(ROUTE_TABLE);
+
+// Gửi sự kiện `page_view` cho analytics mỗi khi router điều hướng xong.
+//
+// Đăng ký ở đây (ngoài cây React) vì `useLocation` / `useMatches` của React
+// Router chỉ dùng được **bên trong** `<RouterProvider>` — mà `AppProviders`
+// lại là cha của nó. Dùng `router.subscribe` thì không bị ràng buộc vị trí
+// render nào, và vẫn nhận đúng mẫu route (`/san-pham/:id`) từ `matches`.
+startPageViewTracking(router);
 
 export function AppRouter() {
   return <RouterProvider router={router} />;

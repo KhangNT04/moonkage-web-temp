@@ -1,6 +1,7 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
 import { generateEntityId } from '@/shared/utils';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import { requestStore, type QuoteRequest } from '@/entities/request';
 import { mapQuoteRequestDto, type QuoteRequestDto } from '@/entities/request';
 
@@ -40,6 +41,13 @@ export interface CreateQuoteRequestPayload {
 export async function createQuoteRequest(
   payload: CreateQuoteRequestPayload
 ): Promise<QuoteRequest> {
+  // Funnel báo giá (FR-15, FR-16). Không ghi `budget`, `customSpec` hay thông
+  // tin giao hàng — đó là dữ liệu tài chính và PII (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.submitQuoteRequest, {
+    type: payload.type,
+    quantity: payload.quantity,
+  });
+
   if (isDemoMode()) {
     const request: QuoteRequest = {
       id: generateEntityId('REQ'),

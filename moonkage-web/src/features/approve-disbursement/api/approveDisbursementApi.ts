@@ -1,5 +1,6 @@
 import { apiClient, GATEWAY, unwrap } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 import type { DisbursementDto } from '@/entities/payment';
 
 /**
@@ -30,6 +31,10 @@ export async function reviewDisbursement(
   requestId: string,
   payload: ReviewDisbursementPayload
 ): Promise<DisbursementDto | null> {
+  // Funnel duyệt giải ngân (FR-47). Chỉ ghi kết quả — không ghi số tiền
+  // được duyệt và không ghi lý do từ chối (NFR-03).
+  trackEvent(ANALYTICS_EVENTS.approveDisbursement, { status: payload.status });
+
   if (isDemoMode()) {
     return null;
   }

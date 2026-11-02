@@ -9,6 +9,7 @@ import { RealtimeProvider } from '@/shared/api/realtime';
 import { queryClient } from '@/shared/api';
 import { subscribeToToken } from '@/shared/api/tokenVault';
 import { isDemoMode } from '@/shared/config';
+import { IdentityBridge } from './IdentityBridge';
 
 interface Props {
   children: ReactNode;
@@ -84,6 +85,8 @@ export function AppProviders({ children }: Props) {
       <CatalogBootstrap />
       <SessionRealtime>{children}</SessionRealtime>
       <ToastContainer />
+      {/* Observability: định danh tài khoản cho lỗi + sự kiện. */}
+      <IdentityBridge />
     </QueryClientProvider>
   );
 }

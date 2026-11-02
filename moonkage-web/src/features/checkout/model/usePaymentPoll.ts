@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { orderApi } from '@/entities/order';
 import { paymentApi, type PaymentDto } from '@/entities/payment';
+import { ANALYTICS_EVENTS, trackEvent } from '@/shared/observability';
 
 /**
  * Poll the state of a payment until the IPN of the gateway arrives (BR-25).
@@ -66,6 +67,14 @@ export function usePaymentPoll(
             if (current) orderIds = checkout?.orderIds ?? [];
           }
           if (!current) return;
+
+          // Funnel: thanh toán thành công (FR-09). Không ghi `amount` — số
+          // tiền là dữ liệu tài chính của đơn hàng (NFR-03).
+          trackEvent(ANALYTICS_EVENTS.purchase, {
+            payment_id: paymentIdToRead,
+            order_count: orderIds.length,
+          });
+
           setState({
             kind: 'succeeded',
             payment,
