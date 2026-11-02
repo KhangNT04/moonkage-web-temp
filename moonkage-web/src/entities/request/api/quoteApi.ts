@@ -8,7 +8,7 @@ import {
   type QuoteRequest,
 } from '../model/requestStore';
 import { mapQuoteDto, mapQuoteRequestDto } from './quoteMappers';
-import type { InvitationDto, QuoteDto, QuoteRequestDto } from './quoteDto';
+import type { AcceptanceDto, InvitationDto, QuoteDto, QuoteRequestDto } from './quoteDto';
 
 /**
  * The read side of the quotation-service (FR-15, FR-16, FR-21, FR-36).
@@ -23,6 +23,24 @@ export const quoteApi = {
       return requestStore.get();
     }
     const res = await apiClient.get<unknown>(GATEWAY.QUOTATION.REQUESTS);
+    return unwrapList<QuoteRequestDto>(res).map(mapQuoteRequestDto);
+  },
+
+  /**
+   * The requests that invited one shop (FR-36).
+   *
+   * `GET /api/quote-requests?vendorId=...` answers the requests sent to the
+   * caller's shop; without `vendorId` the backend answers the caller's own
+   * requests as a buyer (AC-16.3).
+   */
+  async getRequestsByVendor(vendorId: string): Promise<QuoteRequest[]> {
+    if (isDemoMode()) {
+      return requestStore.get();
+    }
+    const params = new URLSearchParams({ vendorId });
+    const res = await apiClient.get<unknown>(
+      `${GATEWAY.QUOTATION.REQUESTS}?${params.toString()}`,
+    );
     return unwrapList<QuoteRequestDto>(res).map(mapQuoteRequestDto);
   },
 
@@ -56,6 +74,42 @@ export const quoteApi = {
     }
     const res = await apiClient.get<unknown>(GATEWAY.QUOTATION.REQUEST_INVITATIONS(requestId));
     return unwrapList<InvitationDto>(res);
+  },
+
+  /**
+   * One quote of a request (FR-17).
+   *
+   * `includeRevisions=true` also answers the older revisions this quote
+   * replaced, newest first.
+   */
+  async getQuote(requestId: string, quoteId: string, includeRevisions = false): Promise<QuoteDto | null> {
+    if (isDemoMode()) {
+      return null;
+    }
+    const params = new URLSearchParams();
+    if (includeRevisions) params.set('includeRevisions', 'true');
+    const query = params.toString();
+    const res = await apiClient.get<unknown>(
+      query
+        ? `${GATEWAY.QUOTATION.QUOTE_BY_ID(requestId, quoteId)}?${query}`
+        : GATEWAY.QUOTATION.QUOTE_BY_ID(requestId, quoteId),
+    );
+    return unwrap<QuoteDto>(res);
+  },
+
+  /**
+   * The binding copy of an accepted quote and its deposit (FR-19).
+   *
+   * Only after the deposit succeeded does the copy become the order's
+   * agreement (BR-04).
+   */
+  async getAcceptance(requestId: string, quoteId: string): Promise<AcceptanceDto | null> {
+    if (isDemoMode()) {
+      return null;
+    }
+    const res = await apiClient.get<unknown>(GATEWAY.QUOTATION.GET_ACCEPTANCE(requestId, quoteId));
+    const dto = unwrap<AcceptanceDto>(res);
+    return dto ?? null;
   },
 };
 

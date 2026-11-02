@@ -202,6 +202,19 @@ export interface CreateVendorReviewPayload {
 }
 
 /**
+ * Wire shape of `com.moonkage.vendor.vendor.dto.response.VendorDocumentResponse`.
+ *
+ * A document of a shop; open it with
+ * `GET /api/vendors/{vendorId}/documents/{documentId}` (AC-27.6, NFR-03).
+ */
+export interface VendorDocumentDto {
+  id: string;
+  /** `DocumentKind`: BUSINESS_LICENSE, FOOD_SAFETY or FEE_INVOICE. */
+  kind: string;
+  uploadedAt?: string;
+}
+
+/**
  * Wire shape of `com.moonkage.vendor.cakeattribute.dto.CakeAttributeResponse`
  * (FR-54): one crust or filling of the catalogue.
  */

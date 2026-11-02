@@ -44,9 +44,10 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
 /**
  * The notifications of the caller.
  *
- * `orchestrator-service` does not publish a REST endpoint for them yet
- * (`NOT_IMPLEMENTED_YET.NOTIFICATIONS`), so the list stays empty outside demo
- * mode rather than showing made-up entries.
+ * `orchestrator-service` has no REST endpoint for them yet
+ * (`NOT_IMPLEMENTED_YET.NOTIFICATIONS`), so the list is fed by the STOMP push of
+ * `/user/queue/notifications` (see `useNotificationPush`) and stays empty
+ * outside demo mode rather than showing made-up entries.
  */
 export const notificationStore = createStore<Notification[]>(
   isDemoMode() ? MOCK_NOTIFICATIONS : [],

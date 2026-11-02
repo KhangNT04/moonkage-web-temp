@@ -82,6 +82,21 @@ export interface CheckoutResponse {
 }
 
 /**
+ * Wire shape of `com.moonkage.order.dto.response.CheckoutResponse`.
+ *
+ * `orderIds` holds one id per Shop, filled once the checkout succeeded
+ * (AC-09.7); it is empty while the payment is still pending.
+ */
+export interface CheckoutDto {
+  checkoutId: string;
+  status: 'PENDING_PAYMENT' | 'SUCCEEDED' | 'FAILED' | 'EXPIRED' | 'REFUND_REQUESTED';
+  totalAmount: number;
+  paymentId: string;
+  expiresAt?: string | null;
+  orderIds?: string[];
+}
+
+/**
  * Wire shape of `com.moonkage.order.dto.request.CreateCheckoutRequest`.
  *
  * `provinceCode` decides the delivery fee of each Shop (BR-30); `invoiceInfo`

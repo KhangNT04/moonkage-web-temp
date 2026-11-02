@@ -107,6 +107,7 @@ export const vendorCatalogApi = {
       return vendorStore.get().find((v) => v.id === id) || null;
     }
     const res = await apiClient.get<unknown>(GATEWAY.VENDOR.SUPPLIER_BY_ID(id));
+    // SupplierController.getSupplier trả về MỘT `SupplierResponse` trong envelope.
     const dto = unwrap<SupplierDto>(res);
     return dto ? mapSupplierToVendor(dto) : null;
   },
@@ -147,6 +148,20 @@ export const vendorCatalogApi = {
     }
     const res = await apiClient.get<unknown>(GATEWAY.VENDOR.ORDER_PROFILE(id));
     return unwrap<OrderProfileDto>(res);
+  },
+
+  /**
+   * The provinces the vendor delivers to (FR-28, AC-28.1).
+   *
+   * `GET /api/vendors/{vendorId}/delivery-areas` answers the province codes in
+   * code order; the province is the unit of the delivery area (Q-12).
+   */
+  async getDeliveryAreas(id: string): Promise<string[]> {
+    if (isDemoMode()) {
+      return [];
+    }
+    const res = await apiClient.get<unknown>(GATEWAY.VENDOR.DELIVERY_AREAS(id));
+    return unwrapList<string>(res);
   },
 
   /** A short-lived link to one private document (AC-27.6, NFR-03). */

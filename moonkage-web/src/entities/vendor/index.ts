@@ -18,6 +18,7 @@ export type {
   UpdateCakeAttributePayload,
   UpdateVendorPayload,
   VendorDetailDto,
+  VendorDocumentDto,
   VendorResponseDto,
   VendorReviewDto,
 } from './api/vendorDto';
@@ -25,7 +26,7 @@ export { registrationFeeApi } from './api/registrationFeeApi';
 export type { RegistrationFeeConfig, RegistrationFeePaymentLink } from './api/registrationFeeApi';
 export { mapDeliveryLabel, mapVendorProductDtoToEntity, mapVendorProductStatus, vendorProductApi } from './api/vendorProductApi';
 export type { ProductImageUploadRequest, ProductUploadLink, SaveVendorProductPayload, UpdateVendorProductPayload, VendorProductDto } from './api/vendorProductApi';
-export { useMyVendorDetail, useMyVendorId, useOrderProfile, useRegistrationFeeConfig, useVendorDetail, useVendorSearch } from './model/useVendorQueries';
+export { useDeliveryAreas, useMyVendorDetail, useMyVendorId, useOrderProfile, useRegistrationFeeConfig, useVendorDetail, useVendorSearch } from './model/useVendorQueries';
 export { useVendorProduct, useVendorProducts } from './model/useVendorProductQueries';
 export { useCakeAttributes } from './model/useVendorAttributeQueries';
 export { VENDOR_STATUS_LABELS, type VendorStatus } from './model/vendorStatusLabels';

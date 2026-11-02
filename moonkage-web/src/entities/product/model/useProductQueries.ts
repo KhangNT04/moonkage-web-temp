@@ -22,3 +22,15 @@ export function useProductDetail(productId: string, provinceCode?: string) {
     productApi.getProductById(productId, provinceCode),
   );
 }
+
+/**
+ * The reviews of a product (AC-11.3).
+ *
+ * The buyer reads them from catalog-service, so the product page shows every
+ * review of the product and not only the ones of one order.
+ */
+export function useProductReviews(productId: string) {
+  return useQueryData(queryKeys.product.reviews(productId), () =>
+    productApi.getReviews(productId),
+  );
+}

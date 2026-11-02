@@ -7,10 +7,12 @@ interface VendorApplicationCardProps {
   vendor: VendorResponseDto;
   /** Mở màn hình thẩm định chi tiết (Q2.1). */
   onReview: (vendor: VendorResponseDto) => void;
+  /** Mở modal gắn hoá đơn phí đăng ký (Q-36). */
+  onAttachFeeInvoice?: (vendor: VendorResponseDto) => void;
 }
 
 /** Thẻ hồ sơ người bán trong danh sách quản trị (Q2.0). */
-export function VendorApplicationCard({ vendor, onReview }: VendorApplicationCardProps) {
+export function VendorApplicationCard({ vendor, onReview, onAttachFeeInvoice }: VendorApplicationCardProps) {
   return (
     <Card className={styles.vendorCard}>
       <div className={styles.cardHeader}>
@@ -81,6 +83,11 @@ export function VendorApplicationCard({ vendor, onReview }: VendorApplicationCar
           <Button variant="secondary" size="sm" onClick={() => onReview(vendor)}>
             Thẩm định chi tiết &amp; Duyệt
           </Button>
+          {onAttachFeeInvoice && (
+            <Button variant="ghost" size="sm" onClick={() => onAttachFeeInvoice(vendor)}>
+              Gắn hoá đơn phí (Q-36)
+            </Button>
+          )}
         </div>
       </div>
     </Card>

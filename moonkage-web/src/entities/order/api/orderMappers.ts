@@ -1,5 +1,5 @@
 import type { Order } from '../model/types';
-import type { OrderDto, ProgressUpdate, ProgressUpdateDto, UiOrderStatus } from './orderDto';
+import type { OrderDto, ProgressUpdate, ProgressUpdateDto, UiOrderStatus, BackendOrderStatus } from './orderDto';
 const STATUS_MAP: Record<string, UiOrderStatus> = {
   PAID: 'PAID',
   CONFIRMED: 'CONFIRMED',
@@ -21,6 +21,36 @@ export function mapOrderStatus(status: string | undefined): UiOrderStatus {
 /** Backend `kind` is `BUY_NOW | CUSTOM_ORDER`; the UI type is `RETAIL | BULK`. */
 export function mapOrderKind(kind: string | undefined): Order['type'] {
   return kind === 'CUSTOM_ORDER' ? 'BULK' : 'RETAIL';
+}
+
+/**
+ * The backend status of a UI status.
+ *
+ * The write side sends the backend's own enum (the root checks the
+ * transition, README §3), so the UI status has to be translated back.
+ */
+export function toBackendOrderStatus(status: UiOrderStatus): BackendOrderStatus {
+  if (status === 'WAITING_MAKET') return 'AWAITING_MOCKUP_APPROVAL';
+  return status;
+}
+
+/**
+ * The next status of an order, or `null` when the order is at its last step.
+ *
+ * The backend moves an order one step forward and refuses a jump with 409
+ * `INVALID_STATE_TRANSITION`, so the UI offers exactly the next step.
+ */
+export function nextOrderStatus(status: UiOrderStatus): UiOrderStatus | null {
+  const flow: Record<string, UiOrderStatus> = {
+    PAID: 'CONFIRMED',
+    CONFIRMED: 'SHIPPING',
+    DEPOSITED: 'WAITING_MAKET',
+    WAITING_MAKET: 'IN_PRODUCTION',
+    IN_PRODUCTION: 'READY_TO_SHIP',
+    READY_TO_SHIP: 'DELIVERED',
+    SHIPPING: 'DELIVERED',
+  };
+  return flow[status] ?? null;
 }
 
 export function mapOrderDtoToEntity(dto: OrderDto): Order {

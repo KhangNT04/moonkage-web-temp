@@ -1,4 +1,4 @@
-import { apiClient, GATEWAY, unwrapList, unwrapPage } from '@/shared/api';
+import { apiClient, GATEWAY, unwrap, unwrapList, unwrapPage } from '@/shared/api';
 import { isDemoMode, provinceCodeOf } from '@/shared/config';
 import { MOCK_PRODUCTS } from '../model/productStore';
 import { INITIAL_CRUSTS, INITIAL_FILLINGS } from '../model/types';
@@ -99,6 +99,37 @@ export function mapCakeAttributeDto(dto: CakeAttributeDto): CakeTaxonomyItem {
   };
 }
 
+/**
+ * Wire shape of `com.moonkage.catalog.dto.response.ProductReviewResponse`.
+ *
+ * The reviews of a product live in catalog-service: the buyer reads them
+ * there, not from the order they were written in (AC-11.3).
+ */
+export interface ProductReviewDto {
+  reviewId: string;
+  rating: number;
+  content?: string;
+  createdAt?: string;
+}
+
+/** One review of a product, as the product page shows it. */
+export interface ProductReview {
+  id: string;
+  rating: number;
+  content: string;
+  createdAt: string;
+}
+
+/** Map a backend review to the UI review. */
+export function mapProductReviewDto(dto: ProductReviewDto): ProductReview {
+  return {
+    id: dto.reviewId,
+    rating: dto.rating,
+    content: dto.content ?? '',
+    createdAt: dto.createdAt ?? new Date().toISOString(),
+  };
+}
+
 export const productApi = {
   /**
    * Products delivered to `province`.
@@ -125,8 +156,24 @@ export const productApi = {
     }
     const params = new URLSearchParams({ provinceCode: provinceCodeOf(province) });
     const res = await apiClient.get<unknown>(`${GATEWAY.CATALOG.PRODUCT_BY_ID(id)}?${params.toString()}`);
-    const list = unwrapList<ProductDto>(res);
-    return list.length > 0 ? mapProductDtoToEntity(list[0]) : null;
+    // ProductReadController.getProduct trả về MỘT `ProductListingResponse` trong
+    // envelope; `unwrapList` trả về mảng rỗng nên chi tiết sản phẩm luôn trống.
+    const dto = unwrap<ProductDto>(res);
+    return dto ? mapProductDtoToEntity(dto) : null;
+  },
+
+  /**
+   * The reviews of a product (AC-11.3).
+   *
+   * `GET /api/products/{productId}/reviews` — the read model of catalog; the
+   * buyer sees every review of the product, not only the ones of one order.
+   */
+  async getReviews(productId: string): Promise<ProductReview[]> {
+    if (isDemoMode()) {
+      return [];
+    }
+    const res = await apiClient.get<unknown>(GATEWAY.CATALOG.PRODUCT_REVIEWS(productId));
+    return unwrapPage<ProductReviewDto>(res).map(mapProductReviewDto);
   },
 
   /**

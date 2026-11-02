@@ -51,8 +51,8 @@ export interface DisbursementDto {
 /** Wire shape of `com.moonkage.payment.dto.request.CreateDisbursementRequest`. */
 export interface CreateDisbursementPayload {
   amount: number;
-  purpose: 'DEPOSIT_RELEASE' | 'FINAL_RELEASE';
-  reason?: string;
+  /** `DisbursementPurpose`: MATERIALS, PRINTING, PACKAGING hoặc RESTOCK. */
+  purpose: 'MATERIALS' | 'PRINTING' | 'PACKAGING' | 'RESTOCK';
 }
 
 /** Wire shape of `com.moonkage.payment.dto.response.RefundResponse`. */

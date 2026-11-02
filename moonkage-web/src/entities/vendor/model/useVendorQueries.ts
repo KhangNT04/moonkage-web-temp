@@ -56,6 +56,18 @@ export function useOrderProfile(vendorId: string) {
   );
 }
 
+/**
+ * The provinces the shop delivers to (FR-28, AC-28.1).
+ *
+ * The province is the unit of the delivery area (Q-12); the list comes from
+ * the backend in code order.
+ */
+export function useDeliveryAreas(vendorId: string | null) {
+  return useQueryData(queryKeys.vendor.deliveryAreas(vendorId ?? ''), () =>
+    vendorId ? vendorCatalogApi.getDeliveryAreas(vendorId) : Promise.resolve([]),
+  );
+}
+
 /** The registration fee the platform charges a new shop. */
 export function useRegistrationFeeConfig() {
   return useQueryData(queryKeys.vendor.registrationFee(), () => registrationFeeApi.getConfig());

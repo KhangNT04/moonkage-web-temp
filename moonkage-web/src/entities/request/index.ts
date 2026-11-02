@@ -3,6 +3,7 @@ export type { CustomType, Quote, QuoteRequest, QuoteStatus, RequestStatus, Reque
 export { mapQuoteDto, mapQuoteRequestDto, toBackendDepositRate } from './api/quoteMappers';
 export { quoteApi, useRequest, useRequests } from './api/quoteApi';
 export type {
+  AcceptanceDto,
   AcceptQuotePayload,
   AcceptQuoteResponseDto,
   CreateQuoteRequestPayload,
@@ -15,4 +16,4 @@ export type {
   QuoteRequestDto,
   SubmitQuotePayload,
 } from './api/quoteDto';
-export { useQuoteRequest, useQuoteRequestList } from './model/useRequestQueries';
+export { useQuoteRequest, useQuoteRequestList, useRequestInvitations, useRequestQuotes, useVendorRequestList } from './model/useRequestQueries';

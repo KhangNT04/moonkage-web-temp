@@ -165,6 +165,26 @@ export interface AcceptQuoteResponseDto {
 }
 
 /**
+ * Wire shape of `com.moonkage.quotation.dto.response.AcceptanceResponse`.
+ *
+ * The binding copy and its deposit (FR-19). `snapshot` is the frozen
+ * agreement as raw JSON; `contentHash` proves it did not change afterwards.
+ */
+export interface AcceptanceDto {
+  id: string;
+  quoteId: string;
+  requestId: string;
+  status: 'PENDING_PAYMENT' | 'SUCCEEDED' | 'FAILED' | 'EXPIRED';
+  depositAmount: number;
+  contentHash?: string;
+  /** The frozen agreement, as raw JSON. */
+  snapshot?: unknown;
+  acceptedAt?: string;
+  paymentExpiresAt?: string | null;
+  paidAt?: string | null;
+}
+
+/**
  * Wire shape of `com.moonkage.quotation.dto.response.InvitationResponse`.
  */
 export interface InvitationDto {

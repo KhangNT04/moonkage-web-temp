@@ -1,10 +1,10 @@
-import { apiClient, GATEWAY, unwrapList, unwrapPage } from '@/shared/api';
+import { apiClient, GATEWAY, unwrap, unwrapList, unwrapPage } from '@/shared/api';
 import { isDemoMode } from '@/shared/config';
 import { useEffect, useState } from 'react';
 import { useStore } from '@/shared/lib';
 import { orderStore, type Order } from '../model';
 import { mapOrderDtoToEntity, mapProgressUpdateDto } from './orderMappers';
-import type { OrderDto, ProgressUpdate, ProgressUpdateDto } from './orderDto';
+import type { CheckoutDto, OrderDto, ProgressUpdate, ProgressUpdateDto } from './orderDto';
 
 /**
  * The read side of the order-service (FR-11, FR-21, FR-32).
@@ -52,8 +52,10 @@ export const orderApi = {
       return orderStore.get().find((o) => o.id === id) || null;
     }
     const res = await apiClient.get<unknown>(GATEWAY.ORDER.ORDER_BY_ID(id));
-    const list = unwrapList<OrderDto>(res);
-    return list.length > 0 ? mapOrderDtoToEntity(list[0]) : null;
+    // OrderController.get trả về MỘT `OrderResponse` trong envelope, không phải
+    // danh sách: `unwrapList` trả về mảng rỗng và chi tiết đơn luôn trống.
+    const dto = unwrap<OrderDto>(res);
+    return dto ? mapOrderDtoToEntity(dto) : null;
   },
 
   /**
@@ -65,6 +67,22 @@ export const orderApi = {
     }
     const res = await apiClient.get<unknown>(GATEWAY.ORDER.PROGRESS_UPDATES(orderId));
     return unwrapList<ProgressUpdateDto>(res).map(mapProgressUpdateDto);
+  },
+
+  /**
+   * The state of a checkout (FR-09, AC-09.7).
+   *
+   * `GET /api/checkouts/{checkoutId}` answers the status and the ids of the
+   * orders it created, one per Shop, once the payment succeeded. The result
+   * page polls it while the status is still `PENDING_PAYMENT`.
+   */
+  async getCheckout(checkoutId: string): Promise<CheckoutDto | null> {
+    if (isDemoMode()) {
+      return null;
+    }
+    const res = await apiClient.get<unknown>(GATEWAY.ORDER.CHECKOUT_BY_ID(checkoutId));
+    const dto = unwrap<CheckoutDto>(res);
+    return dto ?? null;
   },
 };
 

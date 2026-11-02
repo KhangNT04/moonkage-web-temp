@@ -1,9 +1,10 @@
 export type { BulkOrderStatus, MaketVersion, Order, OrderType, ProductionProgressMilestone, RetailOrderStatus } from './model/types';
 export { MOCK_ORDERS, approveMaket, orderStore, requestMaketRevision } from './model/orderStore';
-export { mapOrderDtoToEntity, mapOrderKind, mapOrderStatus, mapProgressUpdateDto } from './api/orderMappers';
+export { mapOrderDtoToEntity, mapOrderKind, mapOrderStatus, mapProgressUpdateDto, nextOrderStatus, toBackendOrderStatus } from './api/orderMappers';
 export { orderApi, useOrder, useOrders } from './api/orderApi';
 export type {
   BackendOrderStatus,
+  CheckoutDto,
   CheckoutResponse,
   CreateCheckoutPayload,
   OrderDto,

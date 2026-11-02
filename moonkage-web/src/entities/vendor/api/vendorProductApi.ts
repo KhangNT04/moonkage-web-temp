@@ -159,6 +159,8 @@ export const vendorProductApi = {
       return null;
     }
     const res = await apiClient.get<unknown>(GATEWAY.VENDOR.PRODUCT_BY_ID(vendorId, productId));
-    return unwrap<VendorProductDto>(res);
+    // ProductController.getProduct trả về MỘT `ProductResponse` trong envelope.
+    const dto = unwrap<VendorProductDto>(res);
+    return dto ?? null;
   },
 };

@@ -19,11 +19,30 @@ export interface PayoutRequest {
   decidedAt?: string | null;
 }
 
+/**
+ * Mục đích giải ngân (`DisbursementPurpose` của payment-service).
+ *
+ * Người bán báo cáo mục đích dùng tiền cọc (nguyên liệu, in ấn, bao bì,
+ * nhập hàng) — `docs/product/context.md` mục 5.
+ */
+export const DISBURSEMENT_PURPOSES = ['MATERIALS', 'PRINTING', 'PACKAGING', 'RESTOCK'] as const;
+
+export type DisbursementPurpose = (typeof DISBURSEMENT_PURPOSES)[number];
+
 /** Nhãn tiếng Việt của mục đích giải ngân. */
 export function payoutPurposeLabel(purpose: string): string {
-  return purpose === 'DEPOSIT_RELEASE'
-    ? 'Giải ngân tiền cọc (Khách đã duyệt Maket)'
-    : 'Đối soát cuối kỳ';
+  switch (purpose) {
+    case 'MATERIALS':
+      return 'Nguyên liệu';
+    case 'PRINTING':
+      return 'In ấn';
+    case 'PACKAGING':
+      return 'Bao bì';
+    case 'RESTOCK':
+      return 'Nhập hàng';
+    default:
+      return purpose;
+  }
 }
 
 /** Map DTO của backend và sổ quỹ sang lệnh giải ngân cho UI. */
@@ -37,7 +56,7 @@ export function toPayoutRequest(
     vendorId: disbursement.ledger.vendorId ?? '',
     vendorName,
     amount: disbursement.amount ?? 0,
-    purpose: disbursement.purpose ?? 'FINAL_RELEASE',
+    purpose: disbursement.purpose ?? 'MATERIALS',
     status: disbursement.status ?? 'PENDING',
     reason: disbursement.reason,
     createdAt: disbursement.createdAt,
