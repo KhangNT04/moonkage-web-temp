@@ -60,12 +60,26 @@ export async function uploadFile(
     throw new Error('Máy chủ không trả về liên kết tải tệp lên.');
   }
 
+  await uploadFileToLink(link, file);
+  return link.tempKey;
+}
+
+/**
+ * Send the bytes of one file to a signed link.
+ *
+ * Step 2 of every upload: the link comes from the service that owns the
+ * bucket, so the caller that already has the link does not have to ask again.
+ * The form fields go first and the file last, named `file`.
+ */
+export async function uploadFileToLink(link: UploadLink, file: File): Promise<void> {
   const form = new FormData();
   Object.entries(link.formFields ?? {}).forEach(([key, value]) => {
     form.append(key, value);
   });
   form.append('file', file);
 
-  await fetch(link.uploadUrl, { method: 'POST', body: form });
-  return link.tempKey;
+  const res = await fetch(link.uploadUrl, { method: 'POST', body: form });
+  if (!res.ok) {
+    throw new Error('Không tải được tệp lên kho lưu trữ.');
+  }
 }

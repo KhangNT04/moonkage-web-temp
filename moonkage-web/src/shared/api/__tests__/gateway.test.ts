@@ -5,7 +5,7 @@ describe('Shared API - Gateway Contract Verification (T-04)', () => {
   it('khớp chính xác các endpoint của Identity & Account Controller', () => {
     expect(GATEWAY.IDENTITY.ME).toBe('/identity-service/api/accounts/me');
     expect(GATEWAY.IDENTITY.REFRESH).toBe('/identity-service/api/auth/refresh-token');
-    expect(GATEWAY.IDENTITY.UPDATE_PROFILE).toBe('/identity-service/api/accounts/me');
+    expect(GATEWAY.IDENTITY.UPDATE_PROFILE).toBe('/identity-service/api/accounts/me/profile');
     expect(GATEWAY.IDENTITY.NFC_SESSIONS).toBe('/identity-service/api/nfc/sessions');
     expect(GATEWAY.IDENTITY.NFC_SESSION_CARD('sess-123')).toBe(
       '/identity-service/api/nfc/sessions/sess-123/card',

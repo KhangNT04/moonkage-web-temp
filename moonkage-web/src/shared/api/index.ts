@@ -20,4 +20,4 @@ export {
   type PageEnvelope,
 } from './envelope';
 export { RealtimeProvider, useRealtime } from './realtime';
-export { createUploadLink, uploadFile, type UploadLink, type UploadTarget } from './upload';
+export { createUploadLink, uploadFile, uploadFileToLink, type UploadLink, type UploadTarget } from './upload';

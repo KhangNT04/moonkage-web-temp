@@ -13,6 +13,7 @@ export const queryKeys = {
     catalog: (provinceCode: string) => ['product', 'catalog', provinceCode] as const,
     detail: (productId: string, provinceCode?: string) =>
       ['product', 'detail', productId, provinceCode ?? ''] as const,
+    reviews: (productId: string) => ['product', 'reviews', productId] as const,
     taxonomy: () => ['product', 'taxonomy'] as const,
   },
   vendor: {
@@ -20,6 +21,7 @@ export const queryKeys = {
     detail: (vendorId: string | null) => ['vendor', 'detail', vendorId ?? ''] as const,
     myId: () => ['vendor', 'my-id'] as const,
     orderProfile: (vendorId: string) => ['vendor', 'order-profile', vendorId] as const,
+    deliveryAreas: (vendorId: string) => ['vendor', 'delivery-areas', vendorId] as const,
     search: (status?: string, ownerAccountId?: string) =>
       ['vendor', 'search', status ?? '', ownerAccountId ?? ''] as const,
     registrationFee: () => ['vendor', 'registration-fee'] as const,
@@ -41,7 +43,10 @@ export const queryKeys = {
   },
   quote: {
     requests: () => ['quote', 'requests'] as const,
+    requestsByVendor: (vendorId: string) => ['quote', 'requests-by-vendor', vendorId] as const,
     detail: (requestId: string) => ['quote', 'detail', requestId] as const,
+    invitations: (requestId: string) => ['quote', 'invitations', requestId] as const,
+    quotes: (requestId: string) => ['quote', 'quotes', requestId] as const,
   },
   dispute: {
     open: () => ['dispute', 'open'] as const,
