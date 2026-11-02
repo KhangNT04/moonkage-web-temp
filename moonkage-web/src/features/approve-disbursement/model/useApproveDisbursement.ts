@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { reviewDisbursement } from '../api/approveDisbursementApi';
+import { reviewDisbursement, type ReviewDisbursementPayload } from '../api/approveDisbursementApi';
 import type { DisbursementDto } from '@/entities/payment';
 
 /**
@@ -10,10 +10,9 @@ export function useApproveDisbursement() {
     (
       orderId: string,
       requestId: string,
-      approve: boolean,
-      amount?: number,
+      payload: ReviewDisbursementPayload
     ): Promise<DisbursementDto | null> =>
-      reviewDisbursement(orderId, requestId, approve, amount),
+      reviewDisbursement(orderId, requestId, payload),
     [],
   );
 }

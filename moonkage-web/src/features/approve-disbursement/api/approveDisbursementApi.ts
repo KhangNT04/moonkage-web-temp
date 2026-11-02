@@ -7,22 +7,35 @@ import type { DisbursementDto } from '@/entities/payment';
  *
  * The payment entity owns the read and the shape of the money; the write lives
  * here because it decides the request, not the ledger data
- * (package-architecture §3 — `api/` of a feature holds the writes).
+    10| * (package-architecture §3 — `api/` of a feature holds the writes).
  */
+
+/**
+ * Wire shape of `com.moonkage.payment.dto.request.ReviewDisbursementRequest`.
+ *
+ * `status` is `APPROVED` or `REJECTED` (`DisbursementStatus`); `approvedAmount`
+ * approves part of the amount asked, omitting it approves the whole; `reason`
+ * is required to reject.
+ */
+export interface ReviewDisbursementPayload {
+  status: 'APPROVED' | 'REJECTED';
+  /** null approves the whole amount asked (FR-47). */
+  approvedAmount?: number | null;
+  reason?: string;
+}
 
 /** FR-47: an admin approves or rejects a disbursement request. */
 export async function reviewDisbursement(
   orderId: string,
   requestId: string,
-  approved: boolean,
-  approvedAmount?: number
+  payload: ReviewDisbursementPayload
 ): Promise<DisbursementDto | null> {
   if (isDemoMode()) {
     return null;
   }
   const res = await apiClient.patch<unknown>(
     GATEWAY.PAYMENT.LEDGER_DISBURSEMENT_REVIEW(orderId, requestId),
-    { approved, approvedAmount }
+    payload
   );
   return unwrap<DisbursementDto>(res);
 }

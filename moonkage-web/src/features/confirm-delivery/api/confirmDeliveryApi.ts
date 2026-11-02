@@ -24,7 +24,7 @@ export async function confirmOrderReceived(orderId: string): Promise<Order> {
     }
     return current as Order;
   }
-  const res = await apiClient.patch<unknown>(GATEWAY.ORDER.ORDER_BY_ID(orderId), {
+  const res = await apiClient.patch<unknown>(GATEWAY.ORDER.ORDER_UPDATE(orderId), {
     receivedConfirmed: true,
   });
   const dto = unwrap<OrderDto>(res);

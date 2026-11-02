@@ -22,5 +22,5 @@ export async function updateCartItem(itemId: string, quantity: number): Promise<
   if (isDemoMode()) {
     return;
   }
-  await apiClient.patch(`${GATEWAY.ORDER.CART_ITEMS}/${itemId}`, { quantity });
+  await apiClient.patch(GATEWAY.ORDER.CART_ITEM(itemId), { quantity });
 }

@@ -14,6 +14,10 @@ interface ProductFormModalProps {
   selectedFillings: CakeFilling[];
   crusts: Array<{ code: string; name: string; isActive: boolean }>;
   fillings: Array<{ code: string; name: string; isActive: boolean }>;
+  /** FR-29: the image keys already attached to the product (temp keys or stored keys). */
+  imageKeys: string[];
+  /** True while an image is being uploaded. */
+  uploadingImage: boolean;
   busy: boolean;
   errorMessage?: string | null;
   onNameChange: (value: string) => void;
@@ -22,6 +26,10 @@ interface ProductFormModalProps {
   onDescriptionChange: (value: string) => void;
   onToggleCrust: (crust: CakeCrust) => void;
   onToggleFilling: (filling: CakeFilling) => void;
+  /** FR-29: upload one image and get its `tempKey`. */
+  onUploadImage: (file: File) => void;
+  /** Remove one image key from the product. */
+  onRemoveImage: (key: string) => void;
   onClose: () => void;
   onSubmit: () => void;
 }
@@ -42,6 +50,8 @@ export function ProductFormModal({
   selectedFillings,
   crusts,
   fillings,
+  imageKeys,
+  uploadingImage,
   busy,
   errorMessage,
   onNameChange,
@@ -50,6 +60,8 @@ export function ProductFormModal({
   onDescriptionChange,
   onToggleCrust,
   onToggleFilling,
+  onUploadImage,
+  onRemoveImage,
   onClose,
   onSubmit,
 }: ProductFormModalProps) {
@@ -111,6 +123,44 @@ export function ProductFormModal({
               placeholder="100"
             />
           </div>
+        </div>
+
+        {/* FR-29: ảnh sản phẩm — tải lên trực tiếp kho, giữ `tempKey`. */}
+        <div className={styles.formGroup}>
+          <label className={styles.label} htmlFor="product-image">
+            Ảnh sản phẩm (tối đa 5 ảnh)
+          </label>
+          <input
+            id="product-image"
+            type="file"
+            accept="image/*"
+            disabled={uploadingImage}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onUploadImage(file);
+              e.target.value = '';
+            }}
+          />
+          <span className={styles.imageHint}>
+            {uploadingImage ? 'Đang tải ảnh lên…' : 'Ảnh được tải thẳng lên kho lưu trữ, không đi qua máy chủ API.'}
+          </span>
+          {imageKeys.length > 0 && (
+            <div className={styles.imageList}>
+              {imageKeys.map((key) => (
+                <span key={key} className={styles.imageItem}>
+                  <span>{key}</span>
+                  <button
+                    type="button"
+                    className={styles.imageRemove}
+                    aria-label={`Bỏ ảnh ${key}`}
+                    onClick={() => onRemoveImage(key)}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* FR-54 Taxonomy: Crusts */}

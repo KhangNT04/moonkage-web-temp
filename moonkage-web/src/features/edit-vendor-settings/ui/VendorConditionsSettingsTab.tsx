@@ -14,6 +14,8 @@ interface VendorConditionsSettingsTabProps {
   onMinLeadTimeDaysChange: (value: string) => void;
   onDefaultDepositPercentChange: (value: string) => void;
   onCustomBoxServiceChange: (value: boolean) => void;
+  onSave: (e: React.FormEvent) => void;
+  busy?: boolean;
 }
 
 /** B6.3: điều kiện nhận đơn đặt hàng doanh nghiệp (BR-21, Flow 3). */
@@ -28,6 +30,8 @@ export function VendorConditionsSettingsTab({
   onMinLeadTimeDaysChange,
   onDefaultDepositPercentChange,
   onCustomBoxServiceChange,
+  onSave,
+  busy,
 }: VendorConditionsSettingsTabProps) {
   return (
     <Card className={styles.formCard}>
@@ -36,7 +40,8 @@ export function VendorConditionsSettingsTab({
         description="Cấu hình chế độ hoạt động và chính sách cọc sản xuất"
       />
 
-      <div className={styles.formBody}>
+      <form onSubmit={onSave}>
+        <div className={styles.formBody}>
         <div className={styles.formGroup}>
           <label className={styles.label}>Chế độ hoạt động của gian hàng (BR-21)</label>
           <div className={styles.modeCards}>
@@ -132,11 +137,12 @@ export function VendorConditionsSettingsTab({
         )}
 
         <div className={styles.formActions}>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" loading={busy}>
             Lưu điều kiện nhận đơn
           </Button>
         </div>
-      </div>
+        </div>
+      </form>
     </Card>
   );
 }

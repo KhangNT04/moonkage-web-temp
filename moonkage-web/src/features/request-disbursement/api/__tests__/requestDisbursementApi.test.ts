@@ -16,21 +16,20 @@ describe('Feature request-disbursement - requestDisbursementApi (FR-41)', () => 
         requestId: 'req-1',
         orderId: 'ord-1',
         amount: 4_200_000,
-        purpose: 'DEPOSIT_RELEASE',
+        purpose: 'MATERIALS',
         status: 'PENDING',
       }) as never
     );
 
     const created = await requestDisbursement('ord-1', {
       amount: 4_200_000,
-      purpose: 'DEPOSIT_RELEASE',
-      reason: 'Khách đã duyệt Maket',
+      purpose: 'MATERIALS',
     });
 
+    // CreateDisbursementRequest của payment-service chỉ nhận {amount, purpose}.
     expect(post).toHaveBeenCalledWith('/payment-service/api/ledgers/ord-1/disbursements', {
       amount: 4_200_000,
-      purpose: 'DEPOSIT_RELEASE',
-      reason: 'Khách đã duyệt Maket',
+      purpose: 'MATERIALS',
     });
     expect(created?.requestId).toBe('req-1');
   });

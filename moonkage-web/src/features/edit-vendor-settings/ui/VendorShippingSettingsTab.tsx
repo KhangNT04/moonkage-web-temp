@@ -1,23 +1,27 @@
-import { Button, Card, CardHeader, Input, Select } from '@/shared/ui';
+import { Button, Card, CardHeader } from '@/shared/ui';
+import { PROVINCE_ITEMS } from '@/shared/config';
 import styles from './vendorSettingsUi.module.css';
 
 interface VendorShippingSettingsTabProps {
-  shippingScope: string;
-  freeShipThreshold: string;
-  expressSupported: boolean;
-  onShippingScopeChange: (value: string) => void;
-  onFreeShipThresholdChange: (value: string) => void;
-  onExpressSupportedChange: (value: boolean) => void;
+  /** The provinces the shop delivers to, as 2-digit national codes (FR-28). */
+  provinceCodes: string[];
+  onProvinceToggle: (code: string) => void;
+  onSave: (e: React.FormEvent) => void;
+  busy?: boolean;
 }
 
-/** B6.2: cấu hình phạm vi giao hàng & phí ship. */
+/**
+ * B6.2: vùng giao hàng của gian hàng (FR-28, AC-28.1).
+ *
+ * The backend replaces the whole list of provinces
+ * (`PUT /api/vendors/{vendorId}/delivery-areas`), so the tab shows the
+ * provinces of the national list and sends the ones the seller ticked.
+ */
 export function VendorShippingSettingsTab({
-  shippingScope,
-  freeShipThreshold,
-  expressSupported,
-  onShippingScopeChange,
-  onFreeShipThresholdChange,
-  onExpressSupportedChange,
+  provinceCodes,
+  onProvinceToggle,
+  onSave,
+  busy,
 }: VendorShippingSettingsTabProps) {
   return (
     <Card className={styles.formCard}>
@@ -26,48 +30,36 @@ export function VendorShippingSettingsTab({
         description="Tích hợp biểu phí giao hàng liên tỉnh theo quy định của Admin sàn Moonkage"
       />
 
-      <div className={styles.formBody}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Phạm vi nhận giao hàng</label>
-          <Select
-            value={shippingScope}
-            onChange={(e) => onShippingScopeChange(e.target.value)}
-            options={[
-              { value: 'LOCAL', label: 'Chỉ nội tỉnh / thành phố cơ sở' },
-              { value: 'REGIONAL', label: 'Miền Bắc (Hà Nội, Hải Phòng, Quảng Ninh...)' },
-              { value: 'NATIONWIDE', label: 'Toàn quốc (có kho bảo quản vận chuyển)' },
-            ]}
-          />
-        </div>
+      <form onSubmit={onSave}>
+        <div className={styles.formBody}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Tỉnh / Thành phố giao được (FR-28)</label>
+            <div className={styles.provinceGrid}>
+              {PROVINCE_ITEMS.map((province) => {
+                const checked = provinceCodes.includes(province.code);
+                return (
+                  <label key={province.code} className={styles.provinceItem}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => onProvinceToggle(province.code)}
+                    />
+                    <span>
+                      {province.name} <code>({province.code})</code>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Đơn hàng đạt giá trị miễn phí vận chuyển (VNĐ)</label>
-          <Input
-            type="number"
-            value={freeShipThreshold}
-            onChange={(e) => onFreeShipThresholdChange(e.target.value)}
-            placeholder="500000"
-          />
+          <div className={styles.formActions}>
+            <Button type="submit" variant="primary" loading={busy}>
+              Lưu cấu hình giao hàng
+            </Button>
+          </div>
         </div>
-
-        <div className={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            id="express"
-            checked={expressSupported}
-            onChange={(e) => onExpressSupportedChange(e.target.checked)}
-          />
-          <label htmlFor="express">
-            Hỗ trợ giao hàng hỏa tốc trong 2 giờ nội thành (Áp dụng cho bánh tươi hạn ngắn)
-          </label>
-        </div>
-
-        <div className={styles.formActions}>
-          <Button type="submit" variant="primary">
-            Lưu cấu hình giao hàng
-          </Button>
-        </div>
-      </div>
+      </form>
     </Card>
   );
 }

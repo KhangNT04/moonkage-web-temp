@@ -1,6 +1,11 @@
 import { Button, Input, Modal } from '@/shared/ui';
 import { formatCurrency } from '@/shared/utils';
-import type { LedgerDto } from '@/entities/payment';
+import {
+  DISBURSEMENT_PURPOSES,
+  payoutPurposeLabel,
+  type DisbursementPurpose,
+  type LedgerDto,
+} from '@/entities/payment';
 import styles from './requestDisbursementUi.module.css';
 
 interface DisbursementRequestModalProps {
@@ -13,11 +18,14 @@ interface DisbursementRequestModalProps {
   orderId: string;
   /** Số tiền đang nhập. */
   amount: string;
+  /** Mục đích giải ngân (`DisbursementPurpose` của payment-service). */
+  purpose: DisbursementPurpose;
   /** Lỗi do request thất bại (đã được chuyển vào tầng trên xử lý). */
   error?: string | null;
   busy?: boolean;
   onOrderIdChange: (orderId: string, amount: string) => void;
   onAmountChange: (amount: string) => void;
+  onPurposeChange: (purpose: DisbursementPurpose) => void;
   onClose: () => void;
   onSubmit: () => void;
 }
@@ -36,10 +44,12 @@ export function DisbursementRequestModal({
   totalAvailable,
   orderId,
   amount,
+  purpose,
   error,
   busy = false,
   onOrderIdChange,
   onAmountChange,
+  onPurposeChange,
   onClose,
   onSubmit,
 }: DisbursementRequestModalProps) {
@@ -93,6 +103,24 @@ export function DisbursementRequestModal({
           />
           <span className={styles.inputHint}>
             Tối đa có thể rút: <strong>{formatCurrency(totalAvailable)}</strong>
+          </span>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Mục đích sử dụng tiền *</label>
+          <select
+            className={styles.select}
+            value={purpose}
+            onChange={(e) => onPurposeChange(e.target.value as DisbursementPurpose)}
+          >
+            {DISBURSEMENT_PURPOSES.map((p) => (
+              <option key={p} value={p}>
+                {payoutPurposeLabel(p)}
+              </option>
+            ))}
+          </select>
+          <span className={styles.inputHint}>
+            Nền tảng xét duyệt và chỉ giải ngân đúng số tiền cần, không vượt quá số tiền cọc đang giữ.
           </span>
         </div>
 
