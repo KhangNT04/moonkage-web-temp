@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AsyncState, Button, toast } from '@/shared/ui';
 import { useAction } from '@/shared/lib';
 import { useCurrentUser } from '@/entities/user';
-import { useVendorProducts, type VendorProductDto } from '@/entities/vendor';
+import { useMyVendorId, useVendorProducts, type VendorProductDto } from '@/entities/vendor';
 import { VendorProductCard } from '@/entities/vendor';
 import { useTaxonomy, type CakeCrust, type CakeFilling } from '@/entities/product';
 import {
@@ -11,16 +11,21 @@ import {
   useLoadVendorProduct,
   useSaveProduct,
 } from '@/features/edit-product';
+import { useUploadProductImage } from '@/features/upload-product-image';
 import styles from './VendorProductsPage.module.css';
 
 export function VendorProductsPage() {
   const user = useCurrentUser();
-  const vendorId = user.vendorId || '';
+  // FR-29: `vendorId` là id gian hàng của chủ Shop; backend tự lấy từ token,
+  // nên ta hỏi `GET /api/vendors/by-owner` để có id thật.
+  const myVendorId = useMyVendorId();
+  const vendorId = user.vendorId || (myVendorId.kind === 'loaded' ? myVendorId.data ?? '' : '');
   const { crusts, fillings } = useTaxonomy();
   const { busy, run, error } = useAction();
   const saveProduct = useSaveProduct();
   const changeProductStatus = useChangeProductStatus();
   const loadVendorProduct = useLoadVendorProduct();
+  const uploadProductImage = useUploadProductImage();
 
   // FR-30: `GET /api/vendors/{vendorId}/products` — mọi trạng thái, mới nhất trước.
   const listQuery = useVendorProducts(vendorId);
@@ -36,6 +41,9 @@ export function VendorProductsPage() {
   const [selectedFillings, setSelectedFillings] = useState<CakeFilling[]>([]);
   const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // FR-29: ảnh của sản phẩm — `tempKey` của file vừa tải lên, hoặc key đã lưu.
+  const [imageKeys, setImageKeys] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleOpenAdd = () => {
     setEditing(null);
@@ -46,6 +54,7 @@ export function VendorProductsPage() {
     setSelectedFillings([]);
     setDescription('Bánh trung thu nướng truyền thống chuẩn vị cổ truyền.');
     setErrorMessage(null);
+    setImageKeys([]);
     setModalOpen(true);
   };
 
@@ -60,7 +69,32 @@ export function VendorProductsPage() {
     setSelectedCrusts((full.crustCodes ?? []) as CakeCrust[]);
     setSelectedFillings((full.fillingCodes ?? []) as CakeFilling[]);
     setDescription(full.description ?? '');
+    // FR-29: giữ lại key của ảnh đã có, để không mất ảnh khi thay thế sản phẩm.
+    setImageKeys((full.images ?? []).map((image) => image.key));
     setModalOpen(true);
+  };
+
+  /** FR-29: tải ảnh lên kho lưu trữ rồi giữ `tempKey` để gửi kèm sản phẩm. */
+  const handleUploadImage = async (file: File) => {
+    setUploadingImage(true);
+    setErrorMessage(null);
+    try {
+      const key = await uploadProductImage(vendorId, file);
+      if (!key) {
+        setErrorMessage('Máy chủ không trả về khóa ảnh. Vui lòng thử lại.');
+        return;
+      }
+      setImageKeys((prev) => [...prev, key]);
+      toast.success('Đã tải ảnh lên. Nhớ bấm "Lưu sản phẩm" để gắn ảnh vào sản phẩm.');
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : 'Không tải được ảnh lên.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = (key: string) => {
+    setImageKeys((prev) => prev.filter((k) => k !== key));
   };
 
   const handleToggleCrust = (c: CakeCrust) => {
@@ -111,6 +145,8 @@ export function VendorProductsPage() {
         stock: Number(stock),
         crustCodes: selectedCrusts,
         fillingCodes: selectedFillings,
+        // FR-29: `imageKeys` là `tempKey` của file vừa tải lên, không phải URL.
+        imageKeys,
       };
 
       if (editing) {
@@ -196,6 +232,8 @@ export function VendorProductsPage() {
         selectedFillings={selectedFillings}
         crusts={crusts}
         fillings={fillings}
+        imageKeys={imageKeys}
+        uploadingImage={uploadingImage}
         busy={busy}
         errorMessage={errorMessage}
         onNameChange={setName}
@@ -204,6 +242,8 @@ export function VendorProductsPage() {
         onDescriptionChange={setDescription}
         onToggleCrust={handleToggleCrust}
         onToggleFilling={handleToggleFilling}
+        onUploadImage={(file) => void handleUploadImage(file)}
+        onRemoveImage={handleRemoveImage}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSaveProduct}
       />

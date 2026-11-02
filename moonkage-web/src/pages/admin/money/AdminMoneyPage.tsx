@@ -71,8 +71,7 @@ export function AdminMoneyPage() {
       const reviewed = await approveDisbursement(
         selectedPayout.orderId,
         selectedPayout.requestId,
-        true,
-        selectedPayout.amount
+        { status: 'APPROVED' }
       );
       if (!reviewed) {
         toast.info('Yêu cầu giải ngân đã được ghi nhận. Vui lòng kiểm tra lại danh sách.');

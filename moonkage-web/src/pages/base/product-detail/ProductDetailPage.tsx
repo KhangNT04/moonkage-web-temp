@@ -4,7 +4,8 @@ import { routes } from '@/shared/config';
 import { formatCurrency } from '@/shared/utils';
 import { useDeliveryProvinceCode } from '@/entities/region';
 import { AsyncState, Badge, Button, ButtonLink, Card, Icon, Breadcrumbs } from '@/shared/ui';
-import { type Product, useProductDetail } from '@/entities/product';
+import { type Product, useProductDetail, useProductReviews } from '@/entities/product';
+import { ProductReviewList } from '@/entities/product';
 import { AddToCartButton } from '@/features/add-to-cart';
 import { useCurrentUser } from '@/entities/user';
 import styles from './ProductDetailPage.module.css';
@@ -13,6 +14,7 @@ export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const provinceCode = useDeliveryProvinceCode();
   const asyncProduct = useProductDetail(id || 'prod_01', provinceCode);
+  const asyncReviews = useProductReviews(id || 'prod_01');
   const user = useCurrentUser();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -199,6 +201,13 @@ export function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Đánh giá sản phẩm (AC-11.3) — nguồn: catalog-service */}
+      <ProductReviewList
+        reviews={asyncReviews.kind === 'loaded' ? asyncReviews.data : []}
+        state={asyncReviews.kind}
+        errorMessage={asyncReviews.kind === 'error' ? asyncReviews.message : undefined}
+      />
     </>
   );
 }}

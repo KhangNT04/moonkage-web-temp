@@ -4,6 +4,7 @@ import { useAction } from '@/shared/lib';
 import { useVendorSearch, type VendorDetailDto, type VendorResponseDto } from '@/entities/vendor';
 import { VendorApplicationCard, type VendorStatus } from '@/entities/vendor';
 import { useLoadVendorDetail, useReviewApplication, VendorReviewModal } from '@/features/review-applications';
+import { AttachVendorDocumentModal } from '@/features/attach-vendor-document';
 import styles from './AdminVendorsPage.module.css';
 
 type AdminVendorTab = 'PENDING' | 'APPROVED' | 'ALL';
@@ -16,6 +17,7 @@ export function AdminVendorsPage() {
   const [licenseChecked, setLicenseChecked] = useState(false);
   const [registryChecked, setRegistryChecked] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [feeInvoiceVendor, setFeeInvoiceVendor] = useState<VendorResponseDto | null>(null);
 
   // FR-45: the admin list of registered vendors, filtered by status.
   const listQuery = useVendorSearch(
@@ -121,7 +123,12 @@ export function AdminVendorsPage() {
         {(vendors) => (
           <div className={styles.vendorList}>
             {vendors.map((vendor) => (
-              <VendorApplicationCard key={vendor.id} vendor={vendor} onReview={handleOpenReview} />
+              <VendorApplicationCard
+                key={vendor.id}
+                vendor={vendor}
+                onReview={handleOpenReview}
+                onAttachFeeInvoice={setFeeInvoiceVendor}
+              />
             ))}
           </div>
         )}
@@ -142,6 +149,15 @@ export function AdminVendorsPage() {
         onClose={() => setReviewModalOpen(false)}
         onApprove={handleApprove}
         onReject={handleReject}
+      />
+
+      {/* Modal gắn hoá đơn phí đăng ký (Q-36, AC-27.6) */}
+      <AttachVendorDocumentModal
+        open={feeInvoiceVendor !== null}
+        vendorId={feeInvoiceVendor?.id ?? null}
+        vendorName={feeInvoiceVendor?.businessName}
+        onClose={() => setFeeInvoiceVendor(null)}
+        onAttached={listQuery.reload}
       />
     </div>
   );

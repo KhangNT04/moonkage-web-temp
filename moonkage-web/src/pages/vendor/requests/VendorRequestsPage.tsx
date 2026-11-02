@@ -1,8 +1,13 @@
 import { useState } from 'react';
-import { Badge, Button, Card, Tabs } from '@/shared/ui';
+import { Badge, Button, Card, Tabs, toast } from '@/shared/ui';
+import { useAction } from '@/shared/lib';
 import { formatCurrency, formatDate } from '@/shared/utils';
-import { type Quote, type QuoteRequest, useQuoteRequestList } from '@/entities/request';
+import { type Quote, type QuoteRequest, useVendorRequestList } from '@/entities/request';
+import { useCurrentUser } from '@/entities/user';
+import { useMyVendorId } from '@/entities/vendor';
 import { SubmitQuoteModal } from '@/features/respond-to-quote-request';
+import { useWithdrawQuote } from '@/features/withdraw-quote';
+import { useDeclineInvitation } from '@/features/decline-invitation';
 import styles from './VendorRequestsPage.module.css';
 
 type RequestTab = 'OPEN' | 'DIRECT' | 'ALL';
@@ -14,8 +19,15 @@ export function VendorRequestsPage() {
 
   // FR-36: the requests sent to the caller's vendor. The backend filters them
   // by the vendor of the token.
-  const asyncRequests = useQuoteRequestList();
+  const user = useCurrentUser();
+  const myVendorId = useMyVendorId();
+  const vendorId = user.vendorId || (myVendorId.kind === 'loaded' ? myVendorId.data ?? '' : '');
+  const asyncRequests = useVendorRequestList(vendorId);
   const requests = asyncRequests.kind === 'loaded' ? asyncRequests.data : [];
+
+  const { busy, run } = useAction();
+  const withdrawQuote = useWithdrawQuote();
+  const declineInvitation = useDeclineInvitation();
 
   const filteredRequests = requests.filter((req) => {
     if (activeTab === 'OPEN') return req.type === 'OPEN';
@@ -30,6 +42,30 @@ export function VendorRequestsPage() {
 
   const handleSubmitQuote = (_quote: Quote) => {
     asyncRequests.reload();
+  };
+
+  /** BR-05: the only change to a sent quote is taking it back. */
+  const handleWithdrawQuote = (req: QuoteRequest) => {
+    const quote = req.quotes[0];
+    if (!quote) return;
+    void run(async () => {
+      await withdrawQuote(req.id, quote.id);
+      toast.success(`Đã rút báo giá #${quote.id} của yêu cầu #${req.id}.`);
+      asyncRequests.reload();
+    });
+  };
+
+  /** AC-36.3: the only answer a vendor may give an invitation is declining it. */
+  const handleDeclineInvitation = (req: QuoteRequest) => {
+    if (!vendorId) return;
+    void run(async () => {
+      await declineInvitation(req.id, vendorId, {
+        status: 'DECLINED',
+        declineReason: 'Xưởng không đủ năng lực đáp ứng số lượng và thời hạn này.',
+      });
+      toast.success(`Đã từ chối lời mời của yêu cầu #${req.id}.`);
+      asyncRequests.reload();
+    });
   };
 
   if (asyncRequests.kind === 'loading') {
@@ -147,6 +183,28 @@ export function VendorRequestsPage() {
                     >
                       {hasQuoted ? 'Cập nhật lại báo giá' : '📝 Soạn báo giá ngay'}
                     </Button>
+
+                    {/* BR-05: rút báo giá đã gửi. AC-36.3: từ chối lời mời. */}
+                    <div className={styles.requestActions}>
+                      {hasQuoted && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          loading={busy}
+                          onClick={() => handleWithdrawQuote(req)}
+                        >
+                          Rút báo giá
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={busy}
+                        onClick={() => handleDeclineInvitation(req)}
+                      >
+                        Từ chối lời mời
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

@@ -4,13 +4,63 @@ import { useParams } from 'react-router-dom';
 import { routes } from '@/shared/config';
 import { formatCurrency } from '@/shared/utils';
 import { Badge, Button, ButtonLink, Card, Breadcrumbs, toast } from '@/shared/ui';
-import { useOrders } from '@/entities/order';
+import { useAction } from '@/shared/lib';
+import { useOrderDetail, nextOrderStatus, toBackendOrderStatus } from '@/entities/order';
+import { useAdvanceOrder } from '@/features/advance-order-status';
+
+const STEPS = [
+  { title: 'Nhận đơn & Chuẩn bị nguyên liệu', desc: 'Kiểm tra bột, trứng muốn, hạt điều, mè rang' },
+  { title: 'Trộn nhân & Nướng bánh mẻ 1', desc: 'Nướng ở nhiệt độ 200°C, quét lòng đỏ trứng gà tươi' },
+  { title: 'Hút ẩm, Đóng gói & Dán tem NFC', desc: 'Dán tem NFC định danh truy xuất nguồn gốc' },
+  { title: 'Đóng thùng & Bàn giao Shipper', desc: 'Giao cho đối tác vận chuyển giao tận nơi' },
+];
 
 export function VendorOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const orders = useOrders();
-  const order = orders.find((o) => o.id === id) || orders[0];
+  const orderId = id || '';
+  const asyncOrder = useOrderDetail(orderId);
+  const order = asyncOrder.kind === 'loaded' ? asyncOrder.data : null;
   const [productionStep, setProductionStep] = useState<number>(2);
+  const { busy, run } = useAction();
+  const advanceOrder = useAdvanceOrder();
+
+  // FR-32, FR-40: chỉ có một bước tiếp theo; backend từ chối nhảy bước (409).
+  const nextStatus = order ? nextOrderStatus(order.status) : null;
+
+  function handleAdvanceStep() {
+    if (!order || !nextStatus) return;
+    void run(async () => {
+      // FR-40: mỗi bước ghi một cập nhật tiến độ kèm ghi chú.
+      await advanceOrder(order.id, {
+        status: toBackendOrderStatus(nextStatus),
+        note: STEPS[productionStep]?.title,
+      });
+      setProductionStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+      toast.success(
+        `Đã chuyển đơn #${order.id} sang bước "${nextStatus}". Khách hàng đã nhận được thông báo.`,
+      );
+      asyncOrder.reload();
+    });
+  }
+
+  if (asyncOrder.kind === 'loading') {
+    return (
+      <div>
+        <p>Đang tải đơn hàng…</p>
+      </div>
+    );
+  }
+
+  if (asyncOrder.kind === 'error') {
+    return (
+      <div>
+        <p>{asyncOrder.message}</p>
+        <Button variant="outline" onClick={asyncOrder.reload}>
+          Thử lại
+        </Button>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -19,22 +69,6 @@ export function VendorOrderDetailPage() {
         <ButtonLink to={routes.vendor.orders}>Về danh sách đơn</ButtonLink>
       </div>
     );
-  }
-
-  const steps = [
-    { title: 'Nhận đơn & Chuẩn bị nguyên liệu', desc: 'Kiểm tra bột, trứng muối, hạt điều, mè rang' },
-    { title: 'Trộn nhân & Nướng bánh mẻ 1', desc: 'Nướng ở nhiệt độ 200°C, quét lòng đỏ trứng gà tươi' },
-    { title: 'Hút ẩm, Đóng gói & Dán tem NFC', desc: 'Dán tem NFC định danh truy xuất nguồn gốc' },
-    { title: 'Đóng thùng & Bàn giao Shipper', desc: 'Giao cho đối tác vận chuyển giao tận nơi' },
-  ];
-
-  function handleAdvanceStep() {
-    if (productionStep < steps.length - 1) {
-      setProductionStep((prev) => prev + 1);
-      toast.success(`Đã cập nhật tiến độ: "${steps[productionStep + 1].title}"! Khách hàng đã nhận được thông báo.`);
-    } else {
-      toast.success('Đơn hàng đã hoàn tất sản xuất và bàn giao vận chuyển!');
-    }
   }
 
   return (
@@ -105,7 +139,7 @@ export function VendorOrderDetailPage() {
           <h2 className={styles.sectionTitle}>Tiến Độ Chế Biến & Kiểm Tra NFC</h2>
 
           <div className={styles.cardBody}>
-            {steps.map((st, i) => (
+            {STEPS.map((st, i) => (
               <div key={i} className={styles.progressRow}>
                 <div
                   className={`${styles.stepBadge} ${i <= productionStep ? styles.stepBadgeDone : styles.stepBadgePending}`}
@@ -127,9 +161,13 @@ export function VendorOrderDetailPage() {
               variant="primary"
               className={styles.productInfo}
               onClick={handleAdvanceStep}
-              disabled={productionStep >= steps.length - 1}
+              disabled={busy || !nextStatus}
             >
-              {productionStep >= steps.length - 1 ? 'Đã Bàn Giao Vận Chuyển' : 'Chuyển Sang Bước Kế Tiếp'}
+              {busy
+                ? 'Đang cập nhật…'
+                : nextStatus
+                  ? `Chuyển Sang Bước "${nextStatus}"`
+                  : 'Đã Bàn Giao Vận Chuyển'}
             </Button>
             <ButtonLink to={routes.vendor.orders} variant="outline">
               Về Danh Sách
@@ -140,4 +178,3 @@ export function VendorOrderDetailPage() {
     </div>
   );
 }
-

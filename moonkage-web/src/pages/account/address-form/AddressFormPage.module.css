@@ -54,6 +54,11 @@
 .checkboxLabel {
   font-size: var(--text-sm);
 }
+.error {
+  margin: 4px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+}
 .actions {
   display: flex;
   gap: 12px;

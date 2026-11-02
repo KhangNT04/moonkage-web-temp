@@ -8,6 +8,8 @@ type VnPayState = {
   amount: number;
   orderIds: string[];
   type: string;
+  /** The checkout that created the payment; the result page reads it (AC-09.7). */
+  checkoutId?: string;
 };
 
 export function VnPaySandboxPage() {
@@ -27,6 +29,7 @@ export function VnPaySandboxPage() {
         state: {
           success: true,
           paymentId: paymentId || generateEntityId('PAY'),
+          checkoutId: state.checkoutId,
           amount: state.amount,
           orderIds: state.orderIds,
           type: state.type,

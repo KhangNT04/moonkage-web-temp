@@ -4,7 +4,12 @@ import { routes } from '@/shared/config';
 import { formatCurrency } from '@/shared/utils';
 import { Badge, Button, Card, Input, Breadcrumbs, AsyncState, EmptyState, toast } from '@/shared/ui';
 import { useAction } from '@/shared/lib';
-import { useLedgerList } from '@/entities/payment';
+import {
+  DISBURSEMENT_PURPOSES,
+  payoutPurposeLabel,
+  useLedgerList,
+  type DisbursementPurpose,
+} from '@/entities/payment';
 import { useCurrentUser } from '@/entities/user';
 import { useRequestDisbursement } from '@/features/request-disbursement';
 
@@ -18,6 +23,7 @@ export function VendorDisbursementsPage() {
   const user = useCurrentUser();
   const [orderId, setOrderId] = useState('');
   const [amount, setAmount] = useState<number>(0);
+  const [purpose, setPurpose] = useState<DisbursementPurpose>('MATERIALS');
   const { busy, run, error } = useAction();
 
   const asyncLedgers = useLedgerList({ vendorId: user.vendorId });
@@ -27,10 +33,7 @@ export function VendorDisbursementsPage() {
   const payableLedgers = ledgers.filter((l) => l.payable);
   const availableBalance = ledgers.reduce((acc, l) => acc + (l.toReceive ?? 0), 0);
 
-  const selected = ledgers.find((l) => l.orderId === orderId);
-
-  function handleRequestDisbursement(e: React.FormEvent) {
-    e.preventDefault();
+  function handleRequestDisbursement(e: React.FormEvent) {    e.preventDefault();
     if (!orderId) {
       toast.error('Vui lòng chọn đơn hàng cần giải ngân.');
       return;
@@ -42,7 +45,7 @@ export function VendorDisbursementsPage() {
     void run(async () => {
       const created = await requestDisbursement(orderId, {
         amount,
-        purpose: selected?.kind === 'CUSTOM_ORDER' ? 'DEPOSIT_RELEASE' : 'FINAL_RELEASE',
+        purpose,
       });
       if (created) {
         toast.success(
@@ -115,6 +118,21 @@ export function VendorDisbursementsPage() {
                 min={100000}
                 required
               />
+            </div>
+
+            <div>
+              <label className={styles.label}>Mục đích sử dụng tiền *</label>
+              <select
+                className={styles.select}
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value as DisbursementPurpose)}
+              >
+                {DISBURSEMENT_PURPOSES.map((p) => (
+                  <option key={p} value={p}>
+                    {payoutPurposeLabel(p)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {error && (

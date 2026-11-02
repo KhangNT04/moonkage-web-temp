@@ -1,10 +1,12 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { routes } from '@/shared/config';
 import { formatCurrency } from '@/shared/utils';
 import { useDeliveryProvinceCode } from '@/entities/region';
 import { AsyncState, Button, ButtonLink, Card, EmptyState, Icon } from '@/shared/ui';
-import { useCart, updateCartQuantity, clearCart, useCartFor } from '@/entities/cart';
+import { useCart, updateCartQuantity, clearCart, useCartFor, syncCart } from '@/entities/cart';
 import { syncCartLineToBackend } from '@/features/add-to-cart';
+import { useRemoveCartItem } from '@/features/remove-cart-item';
 import styles from './CartPage.module.css';
 
 export function CartPage() {
@@ -12,11 +14,29 @@ export function CartPage() {
   const provinceCode = useDeliveryProvinceCode();
   const asyncCart = useCartFor(provinceCode);
   const navigate = useNavigate();
+  const removeCartItem = useRemoveCartItem();
+
+  const remoteCart = asyncCart.kind === 'loaded' ? asyncCart.data : null;
+
+  /** Đồng bộ giỏ hàng từ backend (FR-08, BR-28): server là nguồn sự thật. */
+  useEffect(() => {
+    if (remoteCart) {
+      syncCart(remoteCart);
+    }
+  }, [remoteCart]);
 
   /** Đổi số lượng cục bộ rồi đồng bộ lên backend (BR-28). */
   function changeQuantity(productId: string, quantity: number) {
     const change = updateCartQuantity(productId, quantity);
     syncCartLineToBackend(change.itemId, change.quantity);
+  }
+
+  /** Xóa một món khỏi giỏ (FR-08): DELETE /api/carts/me/items/{itemId}. */
+  function handleRemove(productId: string, itemId?: string) {
+    updateCartQuantity(productId, 0);
+    if (itemId) {
+      void removeCartItem(itemId);
+    }
   }
 
   // Đồng bộ với localCart khi có cập nhật
@@ -123,7 +143,7 @@ export function CartPage() {
                       <button
                         type="button"
                         className={styles.removeBtn}
-                        onClick={() => changeQuantity(item.productId, 0)}
+                        onClick={() => handleRemove(item.productId, item.itemId)}
                         title="Xóa khỏi giỏ"
                       >
                         <Icon name="trash" size={16} />

@@ -1,26 +1,103 @@
 import styles from './AddressFormPage.module.css';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { routes } from '@/shared/config';
+import { routes, PROVINCE_ITEMS } from '@/shared/config';
 import { Button, Card, Input, Breadcrumbs, toast } from '@/shared/ui';
+import { useAction } from '@/shared/lib';
+import { validators } from '@/shared/lib';
+import { addressApi } from '@/entities/address';
+import { useCreateAddress, useUpdateAddress } from '@/features/edit-address';
 
+/**
+ * M6.3.1 — create or edit one delivery address (FR-03).
+ *
+ * The form writes to identity-service: `POST /api/addresses` to create and
+ * `PUT /api/addresses/{addressId}` to replace. The backend replaces the whole
+ * address, so every field of the form is sent every time.
+ */
 export function AddressFormPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id && id !== 'moi');
 
-  const [label, setLabel] = useState(isEdit ? 'Văn phòng công ty' : '');
-  const [recipient, setRecipient] = useState(isEdit ? 'Chị Lan' : '');
-  const [phone, setPhone] = useState(isEdit ? '0918889999' : '');
-  const [province, setProvince] = useState(isEdit ? 'Hà Nội' : 'Hà Nội');
-  const [district, setDistrict] = useState(isEdit ? 'Ba Đình' : '');
-  const [street, setStreet] = useState(isEdit ? '29 Liễu Giai, Capital Place' : '');
-  const [isDefault, setIsDefault] = useState(isEdit);
+  const { busy, run } = useAction();
+  const createAddress = useCreateAddress();
+  const updateAddress = useUpdateAddress();
+
+  const [label, setLabel] = useState('');
+  const [recipient, setRecipient] = useState('');
+  const [phone, setPhone] = useState('');
+  const [provinceCode, setProvinceCode] = useState('01');
+  const [wardName, setWardName] = useState('');
+  const [street, setStreet] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Sửa địa chỉ: nạp địa chỉ đang sửa để điền sẵn form.
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    let current = true;
+    void addressApi
+      .list()
+      .then((addresses) => {
+        if (!current) return;
+        const found = addresses.find((a) => a.id === id);
+        if (!found) return;
+        setLabel(found.label ?? '');
+        setRecipient(found.recipientName);
+        setPhone(found.recipientPhone);
+        setProvinceCode(found.provinceCode);
+        setWardName(found.wardName);
+        setStreet(found.detail);
+        setIsDefault(found.isDefault);
+      })
+      .catch(() => {
+        /* danh sách lỗi thì để người dùng tự điền, không chặn form */
+      });
+    return () => {
+      current = false;
+    };
+  }, [id, isEdit]);
+
+  function validate(): boolean {
+    const next: Record<string, string> = {};
+    if (!recipient.trim()) next.recipient = 'Vui lòng nhập tên người nhận hàng.';
+    if (validators.phoneVN(phone)) {
+      next.phone = 'Số điện thoại không hợp lệ. Ví dụ: 0912345678.';
+    }
+    if (!provinceCode) next.provinceCode = 'Vui lòng chọn tỉnh / thành phố.';
+    if (!wardName.trim()) next.wardName = 'Vui lòng nhập phường / xã.';
+    if (!street.trim()) next.street = 'Vui lòng nhập số nhà, tên đường.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    toast.success(isEdit ? 'Đã cập nhật địa chỉ thành công!' : 'Đã thêm địa chỉ giao bánh mới!');
-    navigate(routes.account.addresses);
+    if (!validate()) return;
+
+    const provinceItem = PROVINCE_ITEMS.find((p) => p.code === provinceCode);
+    const payload = {
+      recipientName: recipient.trim(),
+      recipientPhone: phone.trim(),
+      provinceCode,
+      provinceName: provinceItem?.name ?? '',
+      wardName: wardName.trim(),
+      detail: street.trim(),
+      label: label.trim() || undefined,
+      isDefault,
+    };
+
+    void run(async () => {
+      if (isEdit && id) {
+        await updateAddress(id, payload);
+        toast.success('Đã cập nhật địa chỉ thành công!');
+      } else {
+        await createAddress(payload);
+        toast.success('Đã thêm địa chỉ giao bánh mới!');
+      }
+      navigate(routes.account.addresses);
+    });
   }
 
   return (
@@ -40,89 +117,108 @@ export function AddressFormPage() {
       </div>
 
       <Card padding="lg" className={styles.lead}>
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
           <div>
             <label className={styles.label}>
-              Nhãn gợi nhớ (Ví dụ: Nhà riêng, Văn phòng, Kho xưởng) *
+              Nhãn gợi nhớ (Ví dụ: Nhà riêng, Văn phòng, Kho xưởng)
             </label>
             <Input
               type="text"
               placeholder="Văn phòng công ty"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              required
             />
           </div>
 
           <div className={styles.gridTwo}>
             <div>
-              <label className={styles.label}>
-                Tên người nhận hàng *
-              </label>
+              <label className={styles.label}>Tên người nhận hàng *</label>
               <Input
                 type="text"
                 placeholder="Nguyễn Văn A"
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
-                required
+                aria-invalid={Boolean(errors.recipient)}
+                aria-describedby={errors.recipient ? 'err-recipient' : undefined}
               />
+              {errors.recipient && (
+                <p id="err-recipient" role="alert" className={styles.error}>
+                  {errors.recipient}
+                </p>
+              )}
             </div>
             <div>
-              <label className={styles.label}>
-                Số điện thoại liên hệ *
-              </label>
+              <label className={styles.label}>Số điện thoại liên hệ *</label>
               <Input
                 type="tel"
                 placeholder="0912 345 678"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                required
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? 'err-phone' : undefined}
               />
+              {errors.phone && (
+                <p id="err-phone" role="alert" className={styles.error}>
+                  {errors.phone}
+                </p>
+              )}
             </div>
           </div>
 
           <div className={styles.gridTwo}>
             <div>
-              <label className={styles.label}>
-                Tỉnh / Thành phố *
-              </label>
+              <label className={styles.label}>Tỉnh / Thành phố *</label>
               <select
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
+                value={provinceCode}
+                onChange={(e) => setProvinceCode(e.target.value)}
                 className={styles.input}
+                aria-invalid={Boolean(errors.provinceCode)}
               >
-                <option value="Hà Nội">Hà Nội</option>
-                <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                <option value="Đà Nẵng">Đà Nẵng</option>
-                <option value="Hải Phòng">Hải Phòng</option>
-                <option value="Cần Thơ">Cần Thơ</option>
+                {PROVINCE_ITEMS.map((p) => (
+                  <option key={p.code} value={p.code}>
+                    {p.officialName}
+                  </option>
+                ))}
               </select>
+              {errors.provinceCode && (
+                <p role="alert" className={styles.error}>
+                  {errors.provinceCode}
+                </p>
+              )}
             </div>
             <div>
-              <label className={styles.label}>
-                Quận / Huyện *
-              </label>
+              <label className={styles.label}>Phường / Xã *</label>
               <Input
                 type="text"
-                placeholder="Quận Ba Đình"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                required
+                placeholder="Phường Ba Đình"
+                value={wardName}
+                onChange={(e) => setWardName(e.target.value)}
+                aria-invalid={Boolean(errors.wardName)}
+                aria-describedby={errors.wardName ? 'err-ward' : undefined}
               />
+              {errors.wardName && (
+                <p id="err-ward" role="alert" className={styles.error}>
+                  {errors.wardName}
+                </p>
+              )}
             </div>
           </div>
 
           <div>
-            <label className={styles.label}>
-              Số nhà, tên đường, tòa nhà *
-            </label>
+            <label className={styles.label}>Số nhà, tên đường, tòa nhà *</label>
             <Input
               type="text"
               placeholder="Tầng 18, Tòa Capital Place, 29 Liễu Giai"
               value={street}
               onChange={(e) => setStreet(e.target.value)}
-              required
+              aria-invalid={Boolean(errors.street)}
+              aria-describedby={errors.street ? 'err-street' : undefined}
             />
+            {errors.street && (
+              <p id="err-street" role="alert" className={styles.error}>
+                {errors.street}
+              </p>
+            )}
           </div>
 
           <label className={styles.checkboxRow}>
@@ -135,7 +231,7 @@ export function AddressFormPage() {
           </label>
 
           <div className={styles.actions}>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="primary" loading={busy}>
               {isEdit ? 'Lưu Thay Đổi' : 'Thêm Địa Chỉ'}
             </Button>
             <Button type="button" variant="outline" onClick={() => navigate(routes.account.addresses)}>
@@ -147,4 +243,3 @@ export function AddressFormPage() {
     </div>
   );
 }
-

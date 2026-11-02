@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, Button, Tabs, AsyncState, EmptyState, Icon, toast } from '@/shared/ui';
 import { formatCurrency } from '@/shared/utils';
 import { useAction } from '@/shared/lib';
-import { useLedgerList, VendorLedgerTable } from '@/entities/payment';
+import { useLedgerList, VendorLedgerTable, type DisbursementPurpose } from '@/entities/payment';
 import { useCurrentUser } from '@/entities/user';
 import { useRequestDisbursement, DisbursementRequestModal } from '@/features/request-disbursement';
 import styles from './VendorMoneyPage.module.css';
@@ -19,6 +19,7 @@ export function VendorMoneyPage() {
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [withdrawOrderId, setWithdrawOrderId] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawPurpose, setWithdrawPurpose] = useState<DisbursementPurpose>('MATERIALS');
   const { busy, run, error } = useAction();
 
   const asyncLedgers = useLedgerList({ vendorId: user.vendorId });
@@ -62,10 +63,9 @@ export function VendorMoneyPage() {
       return;
     }
     void run(async () => {
-      const ledger = ledgers.find((l) => l.orderId === withdrawOrderId);
       const created = await requestDisbursement(withdrawOrderId, {
         amount,
-        purpose: ledger?.kind === 'CUSTOM_ORDER' ? 'DEPOSIT_RELEASE' : 'FINAL_RELEASE',
+        purpose: withdrawPurpose,
       });
       setWithdrawModalOpen(false);
       if (created) {
@@ -160,6 +160,7 @@ export function VendorMoneyPage() {
         totalAvailable={totalAvailable}
         orderId={withdrawOrderId}
         amount={withdrawAmount}
+        purpose={withdrawPurpose}
         error={error}
         busy={busy}
         onOrderIdChange={(id, nextAmount) => {
@@ -167,6 +168,7 @@ export function VendorMoneyPage() {
           setWithdrawAmount(nextAmount);
         }}
         onAmountChange={setWithdrawAmount}
+        onPurposeChange={setWithdrawPurpose}
         onClose={() => setWithdrawModalOpen(false)}
         onSubmit={handleWithdraw}
       />

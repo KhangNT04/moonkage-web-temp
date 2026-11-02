@@ -48,7 +48,7 @@ export function AdminDisbursementsPage() {
           orderId: d.orderId ?? d.ledger.orderId,
           vendorId: d.ledger.vendorId ?? '',
           amount: d.amount ?? 0,
-          purpose: d.purpose ?? 'FINAL_RELEASE',
+          purpose: d.purpose ?? 'MATERIALS',
           status: d.status ?? 'PENDING',
           createdAt: d.createdAt,
           reason: d.reason,
@@ -58,7 +58,9 @@ export function AdminDisbursementsPage() {
   async function handleApprove(row: DisbursementRow) {
     setBusyId(row.requestId);
     await run(async () => {
-      const reviewed = await approveDisbursement(row.orderId, row.requestId, true, row.amount);
+      const reviewed = await approveDisbursement(row.orderId, row.requestId, {
+        status: 'APPROVED',
+      });
       if (reviewed) {
         toast.success(
           `Đã phê duyệt lệnh giải ngân ${row.requestId}! Hệ thống đã lập ủy nhiệm chi VietQR.`
